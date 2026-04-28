@@ -52,17 +52,9 @@ FulUrlLauncherApiCanLaunchUrlResponse* handle_can_launch_url(
 // Called when a URL should launch.
 static FulUrlLauncherApiLaunchUrlResponse* handle_launch_url(
     const gchar* url, gpointer user_data) {
-  FlUrlLauncherPlugin* self = FL_URL_LAUNCHER_PLUGIN(user_data);
-
-  FlView* view = fl_plugin_registrar_get_view(self->registrar);
+  (void)user_data;
   g_autoptr(GError) error = nullptr;
-  gboolean launched;
-  if (view != nullptr) {
-    GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(view)));
-    launched = gtk_show_uri_on_window(window, url, GDK_CURRENT_TIME, &error);
-  } else {
-    launched = g_app_info_launch_default_for_uri(url, nullptr, &error);
-  }
+  gboolean launched = g_app_info_launch_default_for_uri(url, nullptr, &error);
   if (!launched) {
     return ful_url_launcher_api_launch_url_response_new(error->message);
   }
