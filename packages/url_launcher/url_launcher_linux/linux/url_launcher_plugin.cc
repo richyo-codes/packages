@@ -52,10 +52,13 @@ FulUrlLauncherApiCanLaunchUrlResponse* handle_can_launch_url(
 // Called when a URL should launch.
 static FulUrlLauncherApiLaunchUrlResponse* handle_launch_url(
     const gchar* url, gpointer user_data) {
-  FlUrlLauncherPlugin* self = FL_URL_LAUNCHER_PLUGIN(user_data);
-
-  FlView* view = fl_plugin_registrar_get_view(self->registrar);
   g_autoptr(GError) error = nullptr;
+#if defined(FLUTTER_LINUX_GTK4)
+  (void)user_data;
+  gboolean launched = g_app_info_launch_default_for_uri(url, nullptr, &error);
+#else
+  FlUrlLauncherPlugin* self = FL_URL_LAUNCHER_PLUGIN(user_data);
+  FlView* view = fl_plugin_registrar_get_view(self->registrar);
   gboolean launched;
   if (view != nullptr) {
     GtkWindow* window = GTK_WINDOW(gtk_widget_get_toplevel(GTK_WIDGET(view)));
@@ -63,6 +66,7 @@ static FulUrlLauncherApiLaunchUrlResponse* handle_launch_url(
   } else {
     launched = g_app_info_launch_default_for_uri(url, nullptr, &error);
   }
+#endif
   if (!launched) {
     return ful_url_launcher_api_launch_url_response_new(error->message);
   }
