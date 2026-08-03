@@ -11,6 +11,8 @@
 #include "file_selector_plugin_private.h"
 #include "messages.g.h"
 
+#if !defined(FLUTTER_LINUX_GTK4)
+
 // TODO(stuartmorgan): Restructure the helper to take a callback for showing
 // the dialog, so that the tests can mock out that callback with something
 // that changes the selection so that the return value path can be tested
@@ -314,3 +316,5 @@ TEST(FileSelectorPlugin, TestGetDirectoryCancel) {
 
   EXPECT_NE(response, nullptr);
 }
+
+#endif  // !defined(FLUTTER_LINUX_GTK4)
