@@ -7,11 +7,17 @@
 #include <flutter_linux/flutter_linux.h>
 #include <gtk/gtk.h>
 
+#if defined(FLUTTER_LINUX_GTK4)
+#include <gio/gio.h>
+#endif
+
 #include "file_selector_plugin_private.h"
 #include "messages.g.h"
 
 // Error codes.
+#if !defined(FLUTTER_LINUX_GTK4)
 const char kBadArgumentsError[] = "Bad Arguments";
+#endif
 const char kNoScreenError[] = "No Screen";
 
 struct _FlFileSelectorPlugin {
@@ -44,6 +50,205 @@ static GtkFileFilter* type_group_to_filter(FfsPlatformTypeGroup* group) {
 
   return GTK_FILE_FILTER(g_object_ref(filter));
 }
+
+#if defined(FLUTTER_LINUX_GTK4)
+
+// GTK4's file dialog API is asynchronous, while the Pigeon API used by this
+// plugin is synchronous. This context lets the handler wait in a nested main
+// loop until the dialog completes.
+struct FileDialogResult {
+  GMainLoop* loop;
+  FfsFileSelectorApiShowFileChooserResponse* response = nullptr;
+};
+
+static GListModel* type_groups_to_filters(
+    FfsPlatformFileChooserOptions* options) {
+  GListStore* filters = g_list_store_new(GTK_TYPE_FILE_FILTER);
+  FlValue* type_groups =
+      ffs_platform_file_chooser_options_get_allowed_file_types(options);
+  if (type_groups != nullptr) {
+    for (size_t i = 0; i < fl_value_get_length(type_groups); i++) {
+      FlValue* type_group = fl_value_get_list_value(type_groups, i);
+      g_autoptr(GtkFileFilter) filter =
+          type_group_to_filter(FFS_PLATFORM_TYPE_GROUP(
+              fl_value_get_custom_value_object(type_group)));
+      if (filter != nullptr) {
+        g_list_store_append(filters, filter);
+      }
+    }
+  }
+  return G_LIST_MODEL(filters);
+}
+
+static void append_file_path(FlValue* filenames, GFile* file) {
+  g_autofree gchar* path = g_file_get_path(file);
+  if (path != nullptr) {
+    fl_value_append_take(filenames, fl_value_new_string(path));
+  }
+}
+
+static void handle_file_dialog_open(GObject* source_object,
+                                    GAsyncResult* result, gpointer user_data) {
+  FileDialogResult* dialog_result = static_cast<FileDialogResult*>(user_data);
+  g_autoptr(GError) error = nullptr;
+  g_autoptr(FlValue) filenames = fl_value_new_list();
+  GFile* file = gtk_file_dialog_open_finish(GTK_FILE_DIALOG(source_object),
+                                            result, &error);
+  if (file != nullptr) {
+    append_file_path(filenames, file);
+    g_object_unref(file);
+  }
+  dialog_result->response =
+      ffs_file_selector_api_show_file_chooser_response_new(filenames);
+  g_main_loop_quit(dialog_result->loop);
+}
+
+static void handle_file_dialog_open_multiple(GObject* source_object,
+                                             GAsyncResult* result,
+                                             gpointer user_data) {
+  FileDialogResult* dialog_result = static_cast<FileDialogResult*>(user_data);
+  g_autoptr(GError) error = nullptr;
+  g_autoptr(FlValue) filenames = fl_value_new_list();
+  g_autoptr(GListModel) files = gtk_file_dialog_open_multiple_finish(
+      GTK_FILE_DIALOG(source_object), result, &error);
+  if (files != nullptr) {
+    for (guint i = 0; i < g_list_model_get_n_items(files); i++) {
+      g_autoptr(GFile) file = G_FILE(g_list_model_get_item(files, i));
+      append_file_path(filenames, file);
+    }
+  }
+  dialog_result->response =
+      ffs_file_selector_api_show_file_chooser_response_new(filenames);
+  g_main_loop_quit(dialog_result->loop);
+}
+
+static void handle_file_dialog_folder(GObject* source_object,
+                                      GAsyncResult* result,
+                                      gpointer user_data) {
+  FileDialogResult* dialog_result = static_cast<FileDialogResult*>(user_data);
+  g_autoptr(GError) error = nullptr;
+  g_autoptr(FlValue) filenames = fl_value_new_list();
+  GFile* file = gtk_file_dialog_select_folder_finish(
+      GTK_FILE_DIALOG(source_object), result, &error);
+  if (file != nullptr) {
+    append_file_path(filenames, file);
+    g_object_unref(file);
+  }
+  dialog_result->response =
+      ffs_file_selector_api_show_file_chooser_response_new(filenames);
+  g_main_loop_quit(dialog_result->loop);
+}
+
+static void handle_file_dialog_multiple_folders(GObject* source_object,
+                                                GAsyncResult* result,
+                                                gpointer user_data) {
+  FileDialogResult* dialog_result = static_cast<FileDialogResult*>(user_data);
+  g_autoptr(GError) error = nullptr;
+  g_autoptr(FlValue) filenames = fl_value_new_list();
+  g_autoptr(GListModel) files = gtk_file_dialog_select_multiple_folders_finish(
+      GTK_FILE_DIALOG(source_object), result, &error);
+  if (files != nullptr) {
+    for (guint i = 0; i < g_list_model_get_n_items(files); i++) {
+      g_autoptr(GFile) file = G_FILE(g_list_model_get_item(files, i));
+      append_file_path(filenames, file);
+    }
+  }
+  dialog_result->response =
+      ffs_file_selector_api_show_file_chooser_response_new(filenames);
+  g_main_loop_quit(dialog_result->loop);
+}
+
+static void handle_file_dialog_save(GObject* source_object,
+                                    GAsyncResult* result, gpointer user_data) {
+  FileDialogResult* dialog_result = static_cast<FileDialogResult*>(user_data);
+  g_autoptr(GError) error = nullptr;
+  g_autoptr(FlValue) filenames = fl_value_new_list();
+  GFile* file = gtk_file_dialog_save_finish(GTK_FILE_DIALOG(source_object),
+                                            result, &error);
+  if (file != nullptr) {
+    append_file_path(filenames, file);
+    g_object_unref(file);
+  }
+  dialog_result->response =
+      ffs_file_selector_api_show_file_chooser_response_new(filenames);
+  g_main_loop_quit(dialog_result->loop);
+}
+
+static FfsFileSelectorApiShowFileChooserResponse* handle_show_file_chooser(
+    FfsPlatformFileChooserActionType type,
+    FfsPlatformFileChooserOptions* options, gpointer user_data) {
+  FlFileSelectorPlugin* self = FL_FILE_SELECTOR_PLUGIN(user_data);
+  FlView* view = fl_plugin_registrar_get_view(self->registrar);
+  if (view == nullptr) {
+    return ffs_file_selector_api_show_file_chooser_response_new_error(
+        kNoScreenError, nullptr, nullptr);
+  }
+
+  GtkWindow* window = GTK_WINDOW(gtk_widget_get_root(GTK_WIDGET(view)));
+  g_autoptr(GtkFileDialog) dialog = gtk_file_dialog_new();
+  gtk_file_dialog_set_title(
+      dialog,
+      type == FILE_SELECTOR_LINUX_PLATFORM_FILE_CHOOSER_ACTION_TYPE_SAVE
+          ? "Save File"
+      : type ==
+              FILE_SELECTOR_LINUX_PLATFORM_FILE_CHOOSER_ACTION_TYPE_CHOOSE_DIRECTORY
+          ? "Choose Directory"
+          : "Open File");
+  const gchar* accept_label =
+      ffs_platform_file_chooser_options_get_accept_button_label(options);
+  if (accept_label != nullptr)
+    gtk_file_dialog_set_accept_label(dialog, accept_label);
+  const gchar* current_folder =
+      ffs_platform_file_chooser_options_get_current_folder_path(options);
+  if (current_folder != nullptr) {
+    g_autoptr(GFile) folder = g_file_new_for_path(current_folder);
+    gtk_file_dialog_set_initial_folder(dialog, folder);
+  }
+  const gchar* current_name =
+      ffs_platform_file_chooser_options_get_current_name(options);
+  if (current_name != nullptr)
+    gtk_file_dialog_set_initial_name(dialog, current_name);
+  // GtkFileDialog does not expose GTK3's create-folders property. GTK4's
+  // native dialog controls folder creation itself, so there is no equivalent
+  // option to apply here.
+  g_autoptr(GListModel) filters = type_groups_to_filters(options);
+  if (g_list_model_get_n_items(filters) > 0)
+    gtk_file_dialog_set_filters(dialog, filters);
+
+  const gboolean* select_multiple =
+      ffs_platform_file_chooser_options_get_select_multiple(options);
+  gboolean multiple = select_multiple != nullptr && *select_multiple;
+  FileDialogResult dialog_result = {g_main_loop_new(nullptr, FALSE), nullptr};
+  if (type == FILE_SELECTOR_LINUX_PLATFORM_FILE_CHOOSER_ACTION_TYPE_OPEN) {
+    if (multiple) {
+      gtk_file_dialog_open_multiple(dialog, window, nullptr,
+                                    handle_file_dialog_open_multiple,
+                                    &dialog_result);
+    } else {
+      gtk_file_dialog_open(dialog, window, nullptr, handle_file_dialog_open,
+                           &dialog_result);
+    }
+  } else if (
+      type ==
+      FILE_SELECTOR_LINUX_PLATFORM_FILE_CHOOSER_ACTION_TYPE_CHOOSE_DIRECTORY) {
+    if (multiple) {
+      gtk_file_dialog_select_multiple_folders(
+          dialog, window, nullptr, handle_file_dialog_multiple_folders,
+          &dialog_result);
+    } else {
+      gtk_file_dialog_select_folder(dialog, window, nullptr,
+                                    handle_file_dialog_folder, &dialog_result);
+    }
+  } else {
+    gtk_file_dialog_save(dialog, window, nullptr, handle_file_dialog_save,
+                         &dialog_result);
+  }
+  g_main_loop_run(dialog_result.loop);
+  g_main_loop_unref(dialog_result.loop);
+  return dialog_result.response;
+}
+
+#else
 
 // Creates a GtkFileChooserNative for the given method call details.
 static GtkFileChooserNative* create_dialog(
@@ -160,6 +365,8 @@ FfsFileSelectorApiShowFileChooserResponse* show_file_chooser(
 
   return ffs_file_selector_api_show_file_chooser_response_new(result);
 }
+
+#endif
 
 static void fl_file_selector_plugin_dispose(GObject* object) {
   FlFileSelectorPlugin* self = FL_FILE_SELECTOR_PLUGIN(object);
