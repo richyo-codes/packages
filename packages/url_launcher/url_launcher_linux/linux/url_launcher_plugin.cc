@@ -53,7 +53,7 @@ FulUrlLauncherApiCanLaunchUrlResponse* handle_can_launch_url(
 static FulUrlLauncherApiLaunchUrlResponse* handle_launch_url(
     const gchar* url, gpointer user_data) {
   g_autoptr(GError) error = nullptr;
-#if defined(FLUTTER_LINUX_GTK4)
+#if defined(FLUTTER_LINUX_GTK4) || GTK_MAJOR_VERSION >= 4
   (void)user_data;
   gboolean launched = g_app_info_launch_default_for_uri(url, nullptr, &error);
 #else

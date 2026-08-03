@@ -8,6 +8,8 @@
 #include "include/file_selector_linux/file_selector_plugin.h"
 #include "messages.g.h"
 
+#if !defined(FLUTTER_LINUX_GTK4)
+
 // Creates a GtkFileChooserNative for the given method call.
 //
 // TODO(stuartmorgan): Make this private/static once the tests are restructured
@@ -24,3 +26,5 @@ GtkFileChooserNative* create_dialog_of_type(
 // mocking out all of the GTK calls.
 FfsFileSelectorApiShowFileChooserResponse* show_file_chooser(
     GtkFileChooserNative* dialog, gint (*run_dialog)(GtkNativeDialog*));
+
+#endif  // !defined(FLUTTER_LINUX_GTK4)
