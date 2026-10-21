@@ -35,7 +35,7 @@ export 'package:flutter/services.dart' show SmartDashesType, SmartQuotesType;
 /// If a [controller] is not specified, [initialValue] can be used to give
 /// the automatically generated controller an initial value.
 ///
-/// {@macro flutter.cupertino.textfield.wantKeepAlive}
+/// {@macro cupertino_ui.textfield.wantKeepAlive}
 ///
 /// Remember to call [TextEditingController.dispose] of the [TextEditingController]
 /// when it is no longer needed. This will ensure any resources used by the object
@@ -186,6 +186,7 @@ class TextFormField extends FormField<String> {
     ScrollController? scrollController,
     super.restorationId,
     bool enableIMEPersonalizedLearning = true,
+    bool? enableInlinePrediction,
     MouseCursor? mouseCursor,
     EditableTextContextMenuBuilder? contextMenuBuilder = _defaultContextMenuBuilder,
     SpellCheckConfiguration? spellCheckConfiguration,
@@ -308,6 +309,7 @@ class TextFormField extends FormField<String> {
                autofillHints: autofillHints,
                scrollController: scrollController,
                enableIMEPersonalizedLearning: enableIMEPersonalizedLearning,
+               enableInlinePrediction: enableInlinePrediction,
                mouseCursor: mouseCursor,
                contextMenuBuilder: contextMenuBuilder,
                spellCheckConfiguration: spellCheckConfiguration,
@@ -339,7 +341,7 @@ class TextFormField extends FormField<String> {
   /// {@macro flutter.widgets.editableText.groupId}
   final Object groupId;
 
-  /// {@macro flutter.cupertino.TextFormField.onChanged}
+  /// {@macro cupertino_ui.TextFormField.onChanged}
   final ValueChanged<String>? onChanged;
 
   static Widget _defaultContextMenuBuilder(

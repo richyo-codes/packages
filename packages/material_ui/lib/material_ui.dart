@@ -6,7 +6,7 @@
 ///
 /// To use, import `package:material_ui/material_ui.dart`.
 ///
-/// {@youtube 560 315 https://www.youtube.com/watch?v=DL0Ix1lnC4w}
+/// Learn more about Material Design widgets on the [Flutter YouTube channel](https://www.youtube.com/watch?v=DL0Ix1lnC4w).
 ///
 /// See also:
 ///
@@ -14,6 +14,7 @@
 ///    for a catalog of commonly-used Material component widgets.
 ///  * [m3.material.io](https://m3.material.io/) for the Material 3 specification
 ///  * [m2.material.io](https://m2.material.io/) for the Material 2 specification
+/// @docImport 'package:intl/intl.dart';
 library material_ui;
 
 export 'package:flutter/widgets.dart';
@@ -119,6 +120,8 @@ export 'src/magnifier.dart';
 export 'src/material.dart';
 export 'src/material_button.dart';
 export 'src/material_localizations.dart';
+export 'src/material_shape_border.dart' show MaterialShapeBorder;
+export 'src/material_shapes.dart';
 export 'src/material_state.dart';
 export 'src/material_state_mixin.dart';
 export 'src/menu_anchor.dart';
@@ -127,6 +130,7 @@ export 'src/menu_button_theme.dart';
 export 'src/menu_style.dart';
 export 'src/menu_theme.dart';
 export 'src/mergeable_material.dart';
+export 'src/migration_utility.dart';
 export 'src/motion.dart';
 export 'src/navigation_bar.dart';
 export 'src/navigation_bar_theme.dart';
@@ -164,6 +168,7 @@ export 'src/segmented_button_theme.dart';
 export 'src/selectable_text.dart';
 export 'src/selection_area.dart';
 export 'src/shadows.dart';
+export 'src/shapes/shapes.dart';
 export 'src/slider.dart';
 export 'src/slider_parts.dart';
 export 'src/slider_theme.dart';

@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 /// @docImport 'circle_avatar.dart';
+/// @docImport 'ink_well.dart';
 /// @docImport 'text_theme.dart';
 library;
 
@@ -22,6 +23,8 @@ import 'material.dart';
 import 'material_localizations.dart';
 import 'theme.dart';
 import 'theme_data.dart';
+
+part 'generated/expansion_tile_defaults_m3.g.dart';
 
 const Duration _kExpand = Duration(milliseconds: 200);
 
@@ -400,7 +403,7 @@ class ExpansionTile extends StatefulWidget {
   ///   [ExpansionTileThemeData].
   final ShapeBorder? collapsedShape;
 
-  /// {@macro flutter.cupertino.Material.clipBehavior}
+  /// {@macro cupertino_ui.Material.clipBehavior}
   ///
   /// If this is not null and a custom collapsed or expanded shape is provided,
   /// the value of [clipBehavior] will be used to clip the expansion tile.
@@ -427,7 +430,7 @@ class ExpansionTile extends StatefulWidget {
   /// more convenient than supplying a controller.
   final ExpansibleController? controller;
 
-  /// {@macro flutter.material.ListTile.dense}
+  /// {@macro material_ui.ListTile.dense}
   final bool? dense;
 
   /// The splash color of the ink response when the tile is tapped.
@@ -451,13 +454,13 @@ class ExpansionTile extends StatefulWidget {
 
   /// Defines how compact the expansion tile's layout will be.
   ///
-  /// {@macro flutter.material.themedata.visualDensity}
+  /// {@macro material_ui.themedata.visualDensity}
   final VisualDensity? visualDensity;
 
-  /// {@macro flutter.material.ListTile.minTileHeight}
+  /// {@macro material_ui.ListTile.minTileHeight}
   final double? minTileHeight;
 
-  /// {@macro flutter.material.ListTile.enableFeedback}
+  /// {@macro material_ui.ListTile.enableFeedback}
   final bool? enableFeedback;
 
   /// Whether this expansion tile is interactive.
@@ -693,7 +696,9 @@ class _ExpansionTileState extends State<ExpansionTile> {
       return Semantics(
         // Live region used to announce state changes (e.g., "expanded" or "collapsed")
         // without taking focus.
-        // blockNode prevents this node from being part of the focus traversal.
+        // The container ensures the live region forms the node that blockNode
+        // removes from focus traversal.
+        container: true,
         label: semanticsHint,
         liveRegion: true,
         accessibilityFocusBlockType: AccessibilityFocusBlockType.blockNode,
@@ -919,34 +924,3 @@ class _ExpansionTileDefaultsM2 extends ExpansionTileThemeData {
   @override
   Color? get collapsedIconColor => _theme.unselectedWidgetColor;
 }
-
-// BEGIN GENERATED TOKEN PROPERTIES - ExpansionTile
-
-// Do not edit by hand. The code between the "BEGIN GENERATED" and
-// "END GENERATED" comments are generated from data in the Material
-// Design token database by the script:
-//   dev/tools/gen_defaults/bin/gen_defaults.dart.
-
-// dart format off
-class _ExpansionTileDefaultsM3 extends ExpansionTileThemeData {
-  _ExpansionTileDefaultsM3(this.context);
-
-  final BuildContext context;
-  late final ThemeData _theme = Theme.of(context);
-  late final ColorScheme _colors = _theme.colorScheme;
-
-  @override
-  Color? get textColor => _colors.onSurface;
-
-  @override
-  Color? get iconColor => _colors.primary;
-
-  @override
-  Color? get collapsedTextColor => _colors.onSurface;
-
-  @override
-  Color? get collapsedIconColor => _colors.onSurfaceVariant;
-}
-// dart format on
-
-// END GENERATED TOKEN PROPERTIES - ExpansionTile

@@ -247,9 +247,8 @@ class _DialTimePickerHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     assert(_debugDialTimePickerEntryMode(context));
-    final TimeOfDayFormat timeOfDayFormat = MaterialLocalizations.of(
-      context,
-    ).timeOfDayFormat(alwaysUse24HourFormat: _TimePickerModel.use24HourFormatOf(context));
+    final TimeOfDayFormat timeOfDayFormat = MaterialLocalizations.of(context)
+        .timeOfDayFormat(alwaysUse24HourFormat: _TimePickerModel.use24HourFormatOf(context));
 
     final _TimePickerDefaults defaultTheme = _TimePickerModel.defaultThemeOf(context);
     final Orientation orientation = _TimePickerModel.orientationOf(context);
@@ -1782,7 +1781,7 @@ class _TimePickerInputState extends State<_TimePickerInput> with RestorationMixi
       return null;
     }
 
-    if (MediaQuery.alwaysUse24HourFormatOf(context)) {
+    if (_TimePickerModel.hourDialTypeOf(context) != _HourDialType.twelveHour) {
       if (newHour >= 0 && newHour < 24) {
         return newHour;
       }
@@ -1870,9 +1869,8 @@ class _TimePickerInputState extends State<_TimePickerInput> with RestorationMixi
   @override
   Widget build(BuildContext context) {
     assert(debugCheckHasMediaQuery(context));
-    final TimeOfDayFormat timeOfDayFormat = MaterialLocalizations.of(
-      context,
-    ).timeOfDayFormat(alwaysUse24HourFormat: _TimePickerModel.use24HourFormatOf(context));
+    final TimeOfDayFormat timeOfDayFormat = MaterialLocalizations.of(context)
+        .timeOfDayFormat(alwaysUse24HourFormat: _TimePickerModel.use24HourFormatOf(context));
     final use24HourDials = hourFormat(of: timeOfDayFormat) != HourFormat.h;
     final ThemeData theme = Theme.of(context);
     final TimePickerThemeData timePickerTheme = _TimePickerModel.themeOf(context);
@@ -2374,10 +2372,10 @@ class TimePickerDialog extends StatefulWidget {
   /// Callback called when the selected entry mode is changed.
   final EntryModeChangeCallback? onEntryModeChanged;
 
-  /// {@macro flutter.material.time_picker.switchToInputEntryModeIcon}
+  /// {@macro material_ui.time_picker.switchToInputEntryModeIcon}
   final Icon? switchToInputEntryModeIcon;
 
-  /// {@macro flutter.material.time_picker.switchToTimerEntryModeIcon}
+  /// {@macro material_ui.time_picker.switchToTimerEntryModeIcon}
   final Icon? switchToTimerEntryModeIcon;
 
   /// If true and entry mode is [TimePickerEntryMode.input], the hour and minute
@@ -2838,10 +2836,10 @@ class _TimePicker extends StatefulWidget {
   /// Callback called when the selected entry mode is changed.
   final EntryModeChangeCallback? onEntryModeChanged;
 
-  /// {@macro flutter.material.time_picker.switchToInputEntryModeIcon}
+  /// {@macro material_ui.time_picker.switchToInputEntryModeIcon}
   final Icon? switchToInputEntryModeIcon;
 
-  /// {@macro flutter.material.time_picker.switchToTimerEntryModeIcon}
+  /// {@macro material_ui.time_picker.switchToTimerEntryModeIcon}
   final Icon? switchToTimerEntryModeIcon;
 
   /// If true, input fields start empty in input mode.
@@ -3179,7 +3177,7 @@ class _TimePickerState extends State<_TimePicker> with RestorationMixin {
 /// parameter to override the default and force the dialog to appear in either
 /// portrait or landscape mode.
 ///
-/// {@template flutter.material.time_picker.switchToInputEntryModeIcon}
+/// {@template material_ui.time_picker.switchToInputEntryModeIcon}
 /// The optional [switchToInputEntryModeIcon] argument can be used to customize
 /// the input method icon that is shown when the [TimePickerEntryMode]
 /// is [TimePickerEntryMode.dial].
@@ -3187,7 +3185,7 @@ class _TimePickerState extends State<_TimePicker> with RestorationMixin {
 /// Defaults to an [Icon] widget with [Icons.keyboard_outlined] as icon.
 /// {@endtemplate}
 ///
-/// {@template flutter.material.time_picker.switchToTimerEntryModeIcon}
+/// {@template material_ui.time_picker.switchToTimerEntryModeIcon}
 /// The optional [switchToTimerEntryModeIcon] argument can be used to customize
 /// the input method icon that is shown when the [TimePickerEntryMode]
 /// is [TimePickerEntryMode.input].
@@ -3266,6 +3264,7 @@ class _TimePickerState extends State<_TimePicker> with RestorationMixin {
 ///   typography, and shape of the time picker.
 /// * [DisplayFeatureSubScreen], which documents the specifics of how
 ///   [DisplayFeature]s can split the screen into sub-screens.
+@awaitNotRequired
 Future<TimeOfDay?> showTimePicker({
   required BuildContext context,
   required TimeOfDay initialTime,

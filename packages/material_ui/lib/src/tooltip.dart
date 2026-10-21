@@ -35,7 +35,7 @@ import 'tooltip_visibility.dart';
 /// representation of the widget, which, for example, can be vocalized by a
 /// screen reader.
 ///
-/// {@youtube 560 315 https://www.youtube.com/watch?v=EeEfD5fI-5Q}
+/// Learn more about [Tooltip] on the [Flutter YouTube channel](https://www.youtube.com/watch?v=EeEfD5fI-5Q).
 ///
 /// <callout-box>
 ///
@@ -429,7 +429,8 @@ class TooltipState extends State<Tooltip> with SingleTickerProviderStateMixin {
 
   /// The plain text message for this tooltip.
   ///
-  /// This value will either come from [widget.message] or [widget.richMessage].
+  /// This value will either come from [Tooltip.message] or
+  /// [Tooltip.richMessage].
   String get _tooltipMessage => widget.message ?? widget.richMessage!.toPlainText();
 
   /// {@macro flutter.widgets.RawTooltipState.ensureTooltipVisible}
@@ -575,7 +576,8 @@ class TooltipState extends State<Tooltip> with SingleTickerProviderStateMixin {
         onTriggered: widget.onTriggered,
         dismissDelay: widget.exitDuration ?? _tooltipTheme.exitDuration ?? _defaultExitDuration,
         positionDelegate: _getDefaultPositionDelegate,
-        ignorePointer: widget.ignorePointer ?? widget.message != null,
+        ignorePointer:
+            widget.ignorePointer ?? _tooltipTheme.ignorePointer ?? widget.message != null,
         child: effectiveChild,
       );
     }

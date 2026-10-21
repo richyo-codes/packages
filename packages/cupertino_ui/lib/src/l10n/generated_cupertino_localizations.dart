@@ -6,6 +6,9 @@
 // To regenerate the file, use:
 // dart script/l10n/bin/gen_localizations.dart --overwrite
 
+/// @docImport 'package:intl/intl.dart';
+library;
+
 import 'dart:collection';
 
 import 'package:flutter/widgets.dart';
@@ -17471,7 +17474,7 @@ final Set<String> kCupertinoSupportedLanguages = HashSet<String>.from(const <Str
 ///
 /// The following locales are supported by this package:
 ///
-/// {@template flutter.localizations.cupertino.languages}
+/// {@template cupertino_ui.localizations.languages}
 ///  * `af` - Afrikaans
 ///  * `am` - Amharic
 ///  * `ar` - Arabic

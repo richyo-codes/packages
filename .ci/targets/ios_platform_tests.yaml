@@ -2,10 +2,6 @@ tasks:
   - name: prepare tool
     script: .ci/scripts/prepare_tool.sh
     infra_step: true # Note infra steps failing prevents "always" from running.
-  - name: enable Swift Package Manager
-    # For consistency between stable and master channels, enable SwiftPM.
-    # TODO(stuartmorgan): Remove this step once it's the default on stable.
-    script: .ci/scripts/enable_swift_package_manager.sh
   - name: create simulator
     script: .ci/scripts/create_simulator.sh
     infra_step: true # Note infra steps failing prevents "always" from running.
@@ -22,7 +18,7 @@ tasks:
   - name: xcode analyze deprecation
     # Ensure we don't accidentally introduce deprecated code.
     script: .ci/scripts/tool_runner.sh
-    args: ["analyze", "--no-dart", "--ios", "--ios-min-version=14.0", "--exclude=script/configs/exclude_xcode_deprecation.yaml,script/configs/xcode_warnings_exceptions.yaml"]
+    args: ["analyze", "--no-dart", "--ios", "--ios-min-version=16.0", "--exclude=script/configs/exclude_xcode_deprecation.yaml,script/configs/xcode_warnings_exceptions.yaml"]
   - name: native test
     script: .ci/scripts/tool_runner.sh
     # Simulator name and version must match name and version in create_simulator.sh

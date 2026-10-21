@@ -12,7 +12,7 @@ import 'theme.dart';
 
 /// {@macro flutter.widgets.RawAutocomplete.RawAutocomplete}
 ///
-/// {@youtube 560 315 https://www.youtube.com/watch?v=-Nny8kzW380}
+/// Learn more about [Autocomplete] on the [Flutter YouTube channel](https://www.youtube.com/watch?v=-Nny8kzW380).
 ///
 /// <callout-box>
 ///
@@ -113,7 +113,10 @@ class Autocomplete<T extends Object> extends StatelessWidget {
 
   /// The [FocusNode] that is used for the text field.
   ///
-  /// {@macro flutter.widgets.RawAutocomplete.split}
+  /// For more information, see [RawAutocomplete.focusNode].
+  // TODO(dkwingsmt): Migrate the doc back to macro
+  // flutter.widgets.RawAutocomplete.split
+  // https://github.com/flutter/flutter/issues/189629
   ///
   /// If this parameter is not null, then [textEditingController] must also be
   /// non-null.
@@ -144,7 +147,10 @@ class Autocomplete<T extends Object> extends StatelessWidget {
 
   /// The [TextEditingController] that is used for the text field.
   ///
-  /// {@macro flutter.widgets.RawAutocomplete.split}
+  /// For more information, see [RawAutocomplete.textEditingController].
+  // TODO(dkwingsmt): Migrate the doc back to macro
+  // flutter.widgets.RawAutocomplete.split
+  // https://github.com/flutter/flutter/issues/189629
   ///
   /// If this parameter is not null, then [focusNode] must also be non-null.
   final TextEditingController? textEditingController;
@@ -220,7 +226,6 @@ class _AutocompleteField extends StatelessWidget {
 // The default Material-style Autocomplete options.
 class _AutocompleteOptions<T extends Object> extends StatelessWidget {
   const _AutocompleteOptions({
-    super.key,
     required this.displayStringForOption,
     required this.onSelected,
     required this.openDirection,
@@ -313,8 +318,10 @@ class _AutocompleteOptionsListState<T extends Object> extends State<_Autocomplet
       itemCount: widget.options.length,
       itemBuilder: (BuildContext context, int index) {
         final T option = widget.options.elementAt(index);
+        final highlight = highlightedIndex == index;
         return Semantics(
           button: true,
+          selected: highlight,
           child: InkWell(
             key: GlobalObjectKey(option),
             onTap: () {
@@ -322,7 +329,6 @@ class _AutocompleteOptionsListState<T extends Object> extends State<_Autocomplet
             },
             child: Builder(
               builder: (BuildContext context) {
-                final highlight = highlightedIndex == index;
                 return Container(
                   color: highlight ? Theme.of(context).focusColor : null,
                   padding: const EdgeInsets.all(16.0),

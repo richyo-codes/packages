@@ -67,8 +67,12 @@ const Duration _kToolbarTransitionDuration = Duration(milliseconds: 125);
 ///   * [CupertinoTextSelectionToolbar.toolbarBuilder], which is of this type.
 ///   * [TextSelectionToolbar.toolbarBuilder], which is similar, but for an
 ///     Material-style toolbar.
-typedef CupertinoToolbarBuilder =
-    Widget Function(BuildContext context, Offset anchorAbove, Offset anchorBelow, Widget child);
+typedef CupertinoToolbarBuilder = Widget Function(
+  BuildContext context,
+  Offset anchorAbove,
+  Offset anchorBelow,
+  Widget child,
+);
 
 /// An iOS-style text selection toolbar.
 ///
@@ -97,7 +101,7 @@ class CupertinoTextSelectionToolbar extends StatelessWidget {
     this.toolbarBuilder = _defaultToolbarBuilder,
   }) : assert(children.length > 0);
 
-  /// {@template flutter.cupertino.TextSelectionToolbar.anchorAbove}
+  /// {@template cupertino_ui.TextSelectionToolbar.anchorAbove}
   /// The focal point above which the toolbar attempts to position itself.
   ///
   /// If there is not enough room above before reaching the top of the screen,
@@ -105,13 +109,13 @@ class CupertinoTextSelectionToolbar extends StatelessWidget {
   /// {@endtemplate}
   final Offset anchorAbove;
 
-  /// {@template flutter.cupertino.TextSelectionToolbar.anchorBelow}
+  /// {@template cupertino_ui.TextSelectionToolbar.anchorBelow}
   /// The focal point below which the toolbar attempts to position itself, if it
   /// doesn't fit above [anchorAbove].
   /// {@endtemplate}
   final Offset anchorBelow;
 
-  /// {@template flutter.cupertino.TextSelectionToolbar.children}
+  /// {@template cupertino_ui.TextSelectionToolbar.children}
   /// The children that will be displayed in the text selection toolbar.
   ///
   /// Typically these are buttons.
@@ -124,7 +128,7 @@ class CupertinoTextSelectionToolbar extends StatelessWidget {
   ///     Cupertino-style text selection toolbar text button.
   final List<Widget> children;
 
-  /// {@template flutter.cupertino.TextSelectionToolbar.toolbarBuilder}
+  /// {@template cupertino_ui.TextSelectionToolbar.toolbarBuilder}
   /// Builds the toolbar container.
   ///
   /// Useful for customizing the high-level background of the toolbar. The given
@@ -292,9 +296,8 @@ class _RenderCupertinoTextSelectionToolbarShape extends RenderShiftedBox {
   bool _isAbove(double childHeight) => anchorAbove.dy >= childHeight - _kToolbarArrowSize.height;
 
   BoxConstraints _constraintsForChild(BoxConstraints constraints) {
-    return BoxConstraints(
-      minWidth: _kToolbarArrowSize.width + _kToolbarBorderRadius.x * 2,
-    ).enforce(constraints.loosen());
+    return BoxConstraints(minWidth: _kToolbarArrowSize.width + _kToolbarBorderRadius.x * 2)
+        .enforce(constraints.loosen());
   }
 
   Offset _computeChildOffset(Size childSize) {

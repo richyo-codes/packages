@@ -23,7 +23,7 @@ const Duration kThemeAnimationDuration = Duration(milliseconds: 200);
 ///
 /// A theme describes the colors and typographic choices of an application.
 ///
-/// {@youtube 560 315 https://www.youtube.com/watch?v=oTvQDJOBXmM}
+/// Learn more about [Theme] on the [Flutter YouTube channel](https://www.youtube.com/watch?v=oTvQDJOBXmM).
 ///
 /// Descendant widgets obtain the current theme's [ThemeData] object using
 /// [Theme.of]. When a widget uses [Theme.of], it is automatically rebuilt if
@@ -59,7 +59,21 @@ class Theme extends StatelessWidget {
   /// {@macro flutter.widgets.ProxyWidget.child}
   final Widget child;
 
-  static final ThemeData _kFallbackTheme = ThemeData.fallback();
+  static ThemeData? _cachedFallbackTheme;
+
+  /// The theme [Theme.of] returns when there is no [Theme] ancestor.
+  ///
+  /// The fallback is cached because constructing a [ThemeData] is expensive,
+  /// but it is rebuilt whenever [defaultTargetPlatform] no longer matches the
+  /// platform it was built for (for example under a `TargetPlatformVariant` or
+  /// after a platform override), so a theme-less subtree adapts to the current
+  /// platform the same way a [MaterialApp] would.
+  static ThemeData get _fallbackTheme {
+    if (_cachedFallbackTheme?.platform != defaultTargetPlatform) {
+      _cachedFallbackTheme = ThemeData.fallback();
+    }
+    return _cachedFallbackTheme!;
+  }
 
   /// The data from the closest [Theme] instance that encloses the given
   /// context.
@@ -132,10 +146,9 @@ class Theme extends StatelessWidget {
     final ThemeData theme =
         inheritedTheme?.theme.data ??
         (inheritedCupertinoTheme != null
-            ? CupertinoBasedMaterialThemeData(
-                themeData: inheritedCupertinoTheme.theme.data,
-              ).materialTheme
-            : _kFallbackTheme);
+            ? CupertinoBasedMaterialThemeData(themeData: inheritedCupertinoTheme.theme.data)
+                  .materialTheme
+            : _fallbackTheme);
     return ThemeData.localize(theme, theme.typography.geometryThemeFor(category));
   }
 

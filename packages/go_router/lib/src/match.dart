@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
@@ -47,7 +48,11 @@ abstract class RouteMatchBase with Diagnosticable {
   String get matchedLocation;
 
   /// Gets the state that represent this route match.
-  GoRouterState buildState(RouteConfiguration configuration, RouteMatchList matches);
+  GoRouterState buildState(
+    RouteConfiguration configuration,
+    RouteMatchList matches, {
+    required Map<String, dynamic> metadata,
+  });
 
   /// Generates a list of [RouteMatchBase] objects by matching the `route` and
   /// its sub-routes with `uri`.
@@ -169,7 +174,7 @@ abstract class RouteMatchBase with Diagnosticable {
       // have at least one match for this ShellRouteBase.
       matches: subRouteMatches!.remove(null)!,
       matchedLocation: remainingLocation,
-      pageKey: ValueKey<String>(route.hashCode.toString()),
+      pageKey: _ShellRoutePageKey(route),
       navigatorKey: navigatorKeyUsed,
     );
     subRouteMatches.putIfAbsent(parentKey, () => <RouteMatchBase>[]).insert(0, result);
@@ -310,7 +315,11 @@ class RouteMatch extends RouteMatchBase {
   int get hashCode => Object.hash(route, matchedLocation, pageKey);
 
   @override
-  GoRouterState buildState(RouteConfiguration configuration, RouteMatchList matches) {
+  GoRouterState buildState(
+    RouteConfiguration configuration,
+    RouteMatchList matches, {
+    required Map<String, dynamic> metadata,
+  }) {
     return GoRouterState(
       configuration,
       uri: matches.uri,
@@ -322,8 +331,52 @@ class RouteMatch extends RouteMatchBase {
       path: route.path,
       extra: matches.extra,
       topRoute: matches.lastOrNull?.route,
+      metadata: metadata,
     );
   }
+}
+
+class _ShellRoutePageKey extends ValueKey<String> {
+  _ShellRoutePageKey(ShellRouteBase route, [ValueKey<String>? imperativePageKey])
+    : _routeIdentity = route.pageIdentity,
+      _imperativePageKey = imperativePageKey,
+      super(
+        imperativePageKey == null
+            ? route.pageIdentity.hashCode.toString()
+            : '${route.pageIdentity.hashCode}-${imperativePageKey.value}',
+      );
+
+  final Object _routeIdentity;
+  final ValueKey<String>? _imperativePageKey;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _ShellRoutePageKey &&
+        other._routeIdentity == _routeIdentity &&
+        other._imperativePageKey == _imperativePageKey;
+  }
+
+  @override
+  int get hashCode => Object.hash(_routeIdentity.hashCode, _imperativePageKey);
+}
+
+class _ShellRouteNavigatorKey extends GlobalKey<NavigatorState> {
+  _ShellRouteNavigatorKey(ShellRouteBase route, this.imperativePageKey)
+    : _routeIdentity = route.pageIdentity,
+      super.constructor();
+
+  final Object _routeIdentity;
+  final ValueKey<String> imperativePageKey;
+
+  @override
+  bool operator ==(Object other) {
+    return other is _ShellRouteNavigatorKey &&
+        other._routeIdentity == _routeIdentity &&
+        other.imperativePageKey == imperativePageKey;
+  }
+
+  @override
+  int get hashCode => Object.hash(_routeIdentity.hashCode, imperativePageKey);
 }
 
 /// An matched result by matching a [ShellRoute] against a location.
@@ -364,7 +417,11 @@ class ShellRouteMatch extends RouteMatchBase {
   final ValueKey<String> pageKey;
 
   @override
-  GoRouterState buildState(RouteConfiguration configuration, RouteMatchList matches) {
+  GoRouterState buildState(
+    RouteConfiguration configuration,
+    RouteMatchList matches, {
+    required Map<String, dynamic> metadata,
+  }) {
     // The route related data is stored in the leaf route match.
     final RouteMatch leafMatch = _lastLeaf;
     if (leafMatch is ImperativeRouteMatch) {
@@ -379,6 +436,7 @@ class ShellRouteMatch extends RouteMatchBase {
       pageKey: pageKey,
       extra: matches.extra,
       topRoute: matches.lastOrNull?.route,
+      metadata: metadata,
     );
   }
 
@@ -389,13 +447,17 @@ class ShellRouteMatch extends RouteMatchBase {
   // TODO(loic-sharma): Remove meta library prefix.
   // https://github.com/flutter/flutter/issues/171410
   @meta.internal
-  ShellRouteMatch copyWith({required List<RouteMatchBase>? matches}) {
+  ShellRouteMatch copyWith({
+    required List<RouteMatchBase>? matches,
+    ValueKey<String>? pageKey,
+    GlobalKey<NavigatorState>? navigatorKey,
+  }) {
     return ShellRouteMatch(
       matches: matches ?? this.matches,
       route: route,
       matchedLocation: matchedLocation,
-      pageKey: pageKey,
-      navigatorKey: navigatorKey,
+      pageKey: pageKey ?? this.pageKey,
+      navigatorKey: navigatorKey ?? this.navigatorKey,
     );
   }
 
@@ -448,8 +510,24 @@ class ImperativeRouteMatch extends RouteMatch {
   }
 
   @override
-  GoRouterState buildState(RouteConfiguration configuration, RouteMatchList matches) {
-    return super.buildState(configuration, this.matches);
+  GoRouterState buildState(
+    RouteConfiguration configuration,
+    RouteMatchList matches, {
+    required Map<String, dynamic> metadata,
+  }) {
+    return GoRouterState(
+      configuration,
+      uri: this.matches.uri,
+      matchedLocation: matchedLocation,
+      fullPath: this.matches.fullPath,
+      pathParameters: this.matches.pathParameters,
+      pageKey: pageKey,
+      name: route.name,
+      path: route.path,
+      extra: this.matches.extra,
+      topRoute: this.matches.lastOrNull?.route,
+      metadata: metadata,
+    );
   }
 
   @override
@@ -585,9 +663,18 @@ class RouteMatchList with Diagnosticable {
   static List<RouteMatchBase> _createNewMatchUntilIncompatible(
     List<RouteMatchBase> currentMatches,
     List<RouteMatchBase> otherMatches,
-    ImperativeRouteMatch match,
-  ) {
-    final List<RouteMatchBase> newMatches = currentMatches.toList();
+    ImperativeRouteMatch match, {
+    List<ShellRouteMatch> ancestorShellRouteMatches = const <ShellRouteMatch>[],
+  }) {
+    final newMatches = <RouteMatchBase>[...currentMatches];
+    // Shell matches outside a recursive branch can still reserve its keys.
+    final existingShellRouteMatches = <ShellRouteMatch>[...ancestorShellRouteMatches];
+    _visitRouteMatches(newMatches, (RouteMatchBase match) {
+      if (match is ShellRouteMatch) {
+        existingShellRouteMatches.add(match);
+      }
+      return true;
+    });
     if (otherMatches.last is ShellRouteMatch &&
         newMatches.isNotEmpty &&
         otherMatches.last.route == newMatches.last.route) {
@@ -600,22 +687,52 @@ class RouteMatchList with Diagnosticable {
             lastShellRouteMatch.matches,
             (otherMatches.last as ShellRouteMatch).matches,
             match,
+            ancestorShellRouteMatches: existingShellRouteMatches,
           ),
         ),
       );
       return newMatches;
     }
-    newMatches.add(_cloneBranchAndInsertImperativeMatch(otherMatches.last, match));
+    final RouteMatchBase branch = otherMatches.last;
+    newMatches.add(
+      _cloneBranchAndInsertImperativeMatch(
+        branch,
+        match,
+        existingShellRouteMatches: existingShellRouteMatches,
+      ),
+    );
     return newMatches;
   }
 
   static RouteMatchBase _cloneBranchAndInsertImperativeMatch(
     RouteMatchBase branch,
-    ImperativeRouteMatch match,
-  ) {
+    ImperativeRouteMatch match, {
+    required List<ShellRouteMatch> existingShellRouteMatches,
+  }) {
     if (branch is ShellRouteMatch) {
+      final bool scopeKeys =
+          branch.route is ShellRoute &&
+          existingShellRouteMatches.any(
+            (ShellRouteMatch existingMatch) =>
+                existingMatch.pageKey == branch.pageKey ||
+                existingMatch.navigatorKey == branch.navigatorKey,
+          );
+      final ValueKey<String> pageKey = scopeKeys
+          ? _ShellRoutePageKey(branch.route, match.pageKey)
+          : branch.pageKey;
+      final GlobalKey<NavigatorState> navigatorKey = scopeKeys
+          ? _ShellRouteNavigatorKey(branch.route, match.pageKey)
+          : branch.navigatorKey;
       return branch.copyWith(
-        matches: <RouteMatchBase>[_cloneBranchAndInsertImperativeMatch(branch.matches.last, match)],
+        matches: <RouteMatchBase>[
+          _cloneBranchAndInsertImperativeMatch(
+            branch.matches.last,
+            match,
+            existingShellRouteMatches: existingShellRouteMatches,
+          ),
+        ],
+        pageKey: pageKey,
+        navigatorKey: navigatorKey,
       );
     }
     // Add the input `match` instead of the incompatibleMatch since it contains
@@ -742,6 +859,92 @@ class RouteMatchList with Diagnosticable {
       return true;
     });
     return result;
+  }
+
+  late final Map<RouteMatchBase, Map<String, dynamic>> _metadataByRouteMatch =
+      _buildMetadataByRouteMatch(matches);
+
+  /// Returns merged metadata for [match].
+  @meta.internal
+  Map<String, dynamic> metadataFor(RouteMatchBase match) {
+    if (match is ImperativeRouteMatch) {
+      return match.matches.topRouteMetadata;
+    }
+    return _metadataByRouteMatch[match] ?? const <String, dynamic>{};
+  }
+
+  /// Returns merged metadata for the currently matched top route.
+  ///
+  /// For imperative matches, this resolves metadata from the imperative match's
+  /// own match list.
+  @meta.internal
+  Map<String, dynamic> get topRouteMetadata {
+    final RouteMatchBase? target = _lastRouteMatchOrNull(matches);
+    if (target == null) {
+      return const <String, dynamic>{};
+    }
+    return metadataFor(target);
+  }
+
+  static RouteMatchBase? _lastRouteMatchOrNull(List<RouteMatchBase> matches) {
+    if (matches.isEmpty) {
+      return null;
+    }
+    RouteMatchBase current = matches.last;
+    while (current is ShellRouteMatch && current.matches.isNotEmpty) {
+      current = current.matches.last;
+    }
+    return current;
+  }
+
+  static Map<RouteMatchBase, Map<String, dynamic>> _buildMetadataByRouteMatch(
+    List<RouteMatchBase> matches,
+  ) {
+    final Map<RouteMatchBase, Map<String, dynamic>> result =
+        HashMap<RouteMatchBase, Map<String, dynamic>>.identity();
+    _addMetadataByRouteMatch(
+      matches: matches,
+      inheritedMetadata: const <String, dynamic>{},
+      result: result,
+    );
+    return result;
+  }
+
+  static void _addMetadataByRouteMatch({
+    required List<RouteMatchBase> matches,
+    required Map<String, dynamic> inheritedMetadata,
+    required Map<RouteMatchBase, Map<String, dynamic>> result,
+  }) {
+    var currentInheritedMetadata = inheritedMetadata;
+    for (final match in matches) {
+      final Map<String, dynamic> currentMetadata = match is ImperativeRouteMatch
+          ? match.matches.topRouteMetadata
+          : mergeMetadata(currentInheritedMetadata, match.route.metadata);
+      result[match] = currentMetadata;
+      if (match is ShellRouteMatch) {
+        _addMetadataByRouteMatch(
+          matches: match.matches,
+          inheritedMetadata: currentMetadata,
+          result: result,
+        );
+      }
+      currentInheritedMetadata = currentMetadata;
+    }
+  }
+
+  /// Merges metadata inherited from a parent with metadata from its child.
+  @meta.internal
+  static Map<String, dynamic> mergeMetadata(
+    Map<String, dynamic> parentMetadata,
+    Map<String, dynamic>? currentMetadata,
+  ) {
+    if (currentMetadata == null || currentMetadata.isEmpty) {
+      return parentMetadata;
+    }
+    if (parentMetadata.isEmpty) {
+      return Map<String, dynamic>.of(currentMetadata);
+    }
+    return <String, dynamic>{...parentMetadata, ...currentMetadata};
   }
 
   /// Traverse route matches in this match list in preorder until visitor

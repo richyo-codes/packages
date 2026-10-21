@@ -14,6 +14,9 @@ String generateCupertinoHeader(String regenerateInstructions) {
 // To regenerate the file, use:
 // $regenerateInstructions
 
+/// @docImport 'package:intl/intl.dart';
+library;
+
 import 'dart:collection';
 
 import 'package:flutter/widgets.dart';
@@ -75,4 +78,4 @@ const String cupertinoFactoryArguments =
 
 const String cupertinoSupportedLanguagesConstant = 'kCupertinoSupportedLanguages';
 
-const String cupertinoSupportedLanguagesDocMacro = 'flutter.localizations.cupertino.languages';
+const String cupertinoSupportedLanguagesDocMacro = 'cupertino_ui.localizations.languages';

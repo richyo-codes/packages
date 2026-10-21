@@ -51,16 +51,20 @@ const double _kDisableSearchBarOpacity = 0.38;
 ///
 /// The `controller` callback provided to [SearchAnchor.builder] can be used
 /// to open the search view and control the editable field on the view.
-typedef SearchAnchorChildBuilder =
-    Widget Function(BuildContext context, SearchController controller);
+typedef SearchAnchorChildBuilder = Widget Function(
+  BuildContext context,
+  SearchController controller,
+);
 
 /// Signature for a function that creates a [Widget] to build the suggestion list
 /// based on the input in the search bar.
 ///
 /// The `controller` callback provided to [SearchAnchor.suggestionsBuilder] can be used
 /// to close the search view and control the editable field on the view.
-typedef SuggestionsBuilder =
-    FutureOr<Iterable<Widget>> Function(BuildContext context, SearchController controller);
+typedef SuggestionsBuilder = FutureOr<Iterable<Widget>> Function(
+  BuildContext context,
+  SearchController controller,
+);
 
 /// Signature for a function that creates a [Widget] to layout the suggestion list.
 ///
@@ -69,6 +73,8 @@ typedef ViewBuilder = Widget Function(Iterable<Widget> suggestions);
 
 /// Manages a "search view" route that allows the user to select one of the
 /// suggested completions for a search query.
+///
+/// Learn more about [SearchAnchor] on the [Flutter YouTube channel](https://www.youtube.com/watch?v=vM2dC8OCZoY).
 ///
 /// The search view's route can either be shown by creating a [SearchController]
 /// and then calling [SearchController.openView] or by tapping on an anchor.
@@ -80,6 +86,55 @@ typedef ViewBuilder = Widget Function(Iterable<Widget> suggestions);
 /// The search view is usually opened by a [SearchBar], an [IconButton] or an [Icon].
 /// If [builder] returns an Icon, or any un-tappable widgets, we don't have
 /// to explicitly call [SearchController.openView].
+///
+/// ## Tap handling on the anchor
+///
+/// By default, [SearchAnchor] wraps the widget returned by [builder] in a
+/// [GestureDetector] that calls [SearchController.openView] on tap. This
+/// behavior is controlled by [enableTapHandling], which defaults to true.
+///
+/// ### When to enable tap handling
+///
+/// Keep [enableTapHandling] set to true (the default) when [builder]
+/// returns a passive widget, such as an [Icon] or [Text]. The outer
+/// [GestureDetector] handles taps and provides tap semantics for accessibility
+/// services.
+///
+/// ### When to disable tap handling
+///
+/// Set [enableTapHandling] to false when the widget returned by [builder]
+/// handles its own tap events or provides its own semantics. For example:
+///
+/// * When returning a [SearchBar] that handles taps through its own callbacks.
+/// * When returning buttons like [IconButton] or other interactive widgets that
+///   already call [SearchController.openView].
+///
+/// Setting [enableTapHandling] to false avoids duplicate gesture recognizers
+/// in the gesture arena and prevents duplicate tap semantics (which can cause
+/// accessibility guideline violations, such as unlabeled tap targets).
+///
+/// When using [SearchAnchor.bar], [enableTapHandling] is already set to
+/// false because the factory constructor's [SearchBar] handles its own taps.
+///
+/// ```dart
+/// SearchAnchor(
+///   enableTapHandling: false,
+///   builder: (BuildContext context, SearchController controller) {
+///     return SearchBar(
+///       controller: controller,
+///       onTap: () {
+///         controller.openView();
+///       },
+///       onChanged: (_) {
+///         controller.openView();
+///       },
+///     );
+///   },
+///   suggestionsBuilder: (BuildContext context, SearchController controller) {
+///     return const <Widget>[];
+///   },
+/// )
+/// ```
 ///
 /// The search view route will be popped if the window size is changed and the
 /// search view route is not in full-screen mode. However, if the search view route
@@ -179,12 +234,19 @@ class SearchAnchor extends StatefulWidget {
     this.enabled = true,
     this.smartDashesType,
     this.smartQuotesType,
+    this.enableTapHandling = true,
   });
 
   /// Create a [SearchAnchor] that has a [SearchBar] which opens a search view.
   ///
   /// All the barX parameters are used to customize the anchor. Similarly, all the
   /// viewX parameters are used to override the view's defaults.
+  ///
+  /// If `barFocusNode` is non-null, it is passed to the search bar as
+  /// [SearchBar.focusNode]. The search bar does not dispose it, so the caller
+  /// is responsible for calling [FocusNode.dispose] when it is no longer
+  /// needed. If null, the search bar creates and manages its own focus node.
+  /// The text field in the search view always uses its own focus node.
   ///
   /// <callout-box>
   ///
@@ -243,6 +305,7 @@ class SearchAnchor extends StatefulWidget {
     bool enabled,
     SmartDashesType? smartDashesType,
     SmartQuotesType? smartQuotesType,
+    FocusNode? barFocusNode,
   }) = _SearchAnchorWithSearchBar;
 
   /// Whether the search view grows to fill the entire screen when the
@@ -429,7 +492,7 @@ class SearchAnchor extends StatefulWidget {
   /// To get a different layout, use [viewBuilder] to override.
   final SuggestionsBuilder suggestionsBuilder;
 
-  /// {@macro flutter.widgets.TextField.textInputAction}
+  /// {@macro material_ui.TextField.textInputAction}
   final TextInputAction? textInputAction;
 
   /// The type of action button to use for the keyboard.
@@ -469,6 +532,16 @@ class SearchAnchor extends StatefulWidget {
   ///  * [TextField.smartQuotesType], which provides the same
   ///    configuration option on a standalone [TextField].
   final SmartQuotesType? smartQuotesType;
+
+  /// Whether to wrap the widget returned by [builder] with a [GestureDetector]
+  /// that opens the search view route when tapped.
+  ///
+  /// Defaults to true.
+  ///
+  /// Set this to false if the widget returned by [builder] handles its own
+  /// tap gestures (such as a [SearchBar] or [IconButton]) to avoid duplicate
+  /// gestures and semantics actions.
+  final bool enableTapHandling;
 
   @override
   State<SearchAnchor> createState() => _SearchAnchorState();
@@ -598,14 +671,15 @@ class _SearchAnchorState extends State<SearchAnchor> {
 
   @override
   Widget build(BuildContext context) {
+    Widget child = widget.builder(context, _searchController);
+    if (widget.enableTapHandling) {
+      child = GestureDetector(onTap: _openView, child: child);
+    }
     return AnimatedOpacity(
       key: _anchorKey,
       opacity: _getOpacity(),
       duration: _kAnchorFadeDuration,
-      child: IgnorePointer(
-        ignoring: !widget.enabled,
-        child: GestureDetector(onTap: _openView, child: widget.builder(context, _searchController)),
-      ),
+      child: IgnorePointer(ignoring: !widget.enabled, child: child),
     );
   }
 }
@@ -972,6 +1046,8 @@ class _ViewContentState extends State<_ViewContent> {
   Iterable<Widget> result = <Widget>[];
   String? searchValue;
   Timer? _timer;
+  // Identifies the latest call so that older async results cannot replace newer ones.
+  int _suggestionsCallId = 0;
 
   @override
   void initState() {
@@ -1008,14 +1084,9 @@ class _ViewContentState extends State<_ViewContent> {
       _timer?.cancel();
       _timer = Timer(Duration.zero, () async {
         searchValue = _controller.text;
-        final Iterable<Widget> suggestions = await widget.suggestionsBuilder(context, _controller);
+        await _buildSuggestions();
         _timer?.cancel();
         _timer = null;
-        if (mounted) {
-          setState(() {
-            result = suggestions;
-          });
-        }
       });
     }
   }
@@ -1056,13 +1127,19 @@ class _ViewContentState extends State<_ViewContent> {
   Future<void> updateSuggestions() async {
     if (searchValue != _controller.text) {
       searchValue = _controller.text;
-      final Iterable<Widget> suggestions = await widget.suggestionsBuilder(context, _controller);
-      if (mounted) {
-        setState(() {
-          result = suggestions;
-        });
-      }
+      await _buildSuggestions();
     }
+  }
+
+  Future<void> _buildSuggestions() async {
+    final int callId = ++_suggestionsCallId;
+    final Iterable<Widget> suggestions = await widget.suggestionsBuilder(context, _controller);
+    if (!mounted || callId != _suggestionsCallId) {
+      return;
+    }
+    setState(() {
+      result = suggestions;
+    });
   }
 
   @override
@@ -1138,114 +1215,126 @@ class _ViewContentState extends State<_ViewContent> {
       child: const Divider(height: 1),
     );
 
-    return Align(
-      alignment: Alignment.topLeft,
-      child: Transform.translate(
-        offset: _viewRect.topLeft,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minWidth: minWidth,
-            maxWidth: _viewRect.width,
-            minHeight: minHeight,
-            maxHeight: _viewRect.height,
-          ),
-          child: Padding(
-            padding: widget.showFullScreenView
-                ? EdgeInsets.zero
-                : (effectivePadding ?? EdgeInsets.zero),
-            child: Material(
-              clipBehavior: Clip.antiAlias,
-              shape: effectiveShape,
-              color: effectiveBackgroundColor,
-              surfaceTintColor: effectiveSurfaceTint,
-              elevation: effectiveElevation,
-              child: OverflowBox(
-                alignment: Alignment.topLeft,
-                maxWidth: math.min(widget.viewMaxWidth, _screenSize!.width),
-                minWidth: 0,
-                fit: OverflowBoxFit.deferToChild,
-                child: FadeTransition(
-                  opacity: viewIconsFadeCurve,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      Padding(
-                        padding: EdgeInsets.only(top: widget.topPadding),
-                        child: SafeArea(
-                          top: false,
-                          bottom: false,
-                          child: SearchBar(
-                            autoFocus: true,
-                            constraints:
-                                headerConstraints ??
-                                (widget.showFullScreenView
-                                    ? BoxConstraints(
-                                        minHeight: _SearchViewDefaultsM3.fullScreenBarHeight,
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Transform.translate(
+            offset: _viewRect.topLeft,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: minWidth,
+                maxWidth: widget.showFullScreenView
+                    ? math.max(constraints.maxWidth, minWidth)
+                    : _viewRect.width,
+                minHeight: minHeight,
+                maxHeight: widget.showFullScreenView
+                    ? math.max(constraints.maxHeight, minHeight)
+                    : _viewRect.height,
+              ),
+              child: Padding(
+                padding: widget.showFullScreenView
+                    ? EdgeInsets.zero
+                    : (effectivePadding ?? EdgeInsets.zero),
+                child: Material(
+                  clipBehavior: Clip.antiAlias,
+                  shape: effectiveShape,
+                  color: effectiveBackgroundColor,
+                  surfaceTintColor: effectiveSurfaceTint,
+                  elevation: effectiveElevation,
+                  child: OverflowBox(
+                    alignment: Alignment.topLeft,
+                    maxWidth: widget.showFullScreenView
+                        ? constraints.maxWidth
+                        : math.min(widget.viewMaxWidth, constraints.maxWidth),
+                    minWidth: 0,
+                    fit: OverflowBoxFit.deferToChild,
+                    child: FadeTransition(
+                      opacity: viewIconsFadeCurve,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          Padding(
+                            padding: EdgeInsets.only(top: widget.topPadding),
+                            child: SafeArea(
+                              top: false,
+                              bottom: false,
+                              child: SearchBar(
+                                autoFocus: true,
+                                constraints:
+                                    headerConstraints ??
+                                    (widget.showFullScreenView
+                                        ? BoxConstraints(
+                                            minHeight: _SearchViewDefaultsM3.fullScreenBarHeight,
+                                          )
+                                        : null),
+                                padding: WidgetStatePropertyAll<EdgeInsetsGeometry?>(
+                                  effectiveBarPadding,
+                                ),
+                                leading: widget.viewLeading ?? defaultLeading,
+                                trailing: widget.viewTrailing ?? defaultTrailing,
+                                hintText: widget.viewHintText,
+                                backgroundColor: const MaterialStatePropertyAll<Color>(
+                                  Colors.transparent,
+                                ),
+                                overlayColor: const MaterialStatePropertyAll<Color>(
+                                  Colors.transparent,
+                                ),
+                                elevation: const MaterialStatePropertyAll<double>(0.0),
+                                textStyle: MaterialStatePropertyAll<TextStyle?>(effectiveTextStyle),
+                                hintStyle: MaterialStatePropertyAll<TextStyle?>(effectiveHintStyle),
+                                controller: _controller,
+                                onChanged: (String value) {
+                                  widget.viewOnChanged?.call(value);
+                                  updateSuggestions();
+                                },
+                                onSubmitted: widget.viewOnSubmitted,
+                                textCapitalization: widget.textCapitalization,
+                                textInputAction: widget.textInputAction,
+                                keyboardType: widget.keyboardType,
+                                smartDashesType: widget.smartDashesType,
+                                smartQuotesType: widget.smartQuotesType,
+                              ),
+                            ),
+                          ),
+                          if (!effectiveShrinkWrap ||
+                              minHeight > 0 ||
+                              widget.showFullScreenView ||
+                              result.isNotEmpty) ...<Widget>[
+                            FadeTransition(opacity: viewDividerFadeCurve, child: viewDivider),
+                            Flexible(
+                              fit: (effectiveShrinkWrap && !widget.showFullScreenView)
+                                  ? FlexFit.loose
+                                  : FlexFit.tight,
+                              child: FadeTransition(
+                                opacity: viewListFadeOnIntervalCurve,
+                                child: widget.viewBuilder == null
+                                    ? MediaQuery.removePadding(
+                                        context: context,
+                                        removeTop: true,
+                                        child: ListView(
+                                          padding: EdgeInsets.only(
+                                            bottom: MediaQuery.viewInsetsOf(context).bottom,
+                                          ),
+                                          shrinkWrap: effectiveShrinkWrap,
+                                          children: result.toList(),
+                                        ),
                                       )
-                                    : null),
-                            padding: WidgetStatePropertyAll<EdgeInsetsGeometry?>(
-                              effectiveBarPadding,
+                                    : widget.viewBuilder!(result),
+                              ),
                             ),
-                            leading: widget.viewLeading ?? defaultLeading,
-                            trailing: widget.viewTrailing ?? defaultTrailing,
-                            hintText: widget.viewHintText,
-                            backgroundColor: const MaterialStatePropertyAll<Color>(
-                              Colors.transparent,
-                            ),
-                            overlayColor: const MaterialStatePropertyAll<Color>(Colors.transparent),
-                            elevation: const MaterialStatePropertyAll<double>(0.0),
-                            textStyle: MaterialStatePropertyAll<TextStyle?>(effectiveTextStyle),
-                            hintStyle: MaterialStatePropertyAll<TextStyle?>(effectiveHintStyle),
-                            controller: _controller,
-                            onChanged: (String value) {
-                              widget.viewOnChanged?.call(value);
-                              updateSuggestions();
-                            },
-                            onSubmitted: widget.viewOnSubmitted,
-                            textCapitalization: widget.textCapitalization,
-                            textInputAction: widget.textInputAction,
-                            keyboardType: widget.keyboardType,
-                            smartDashesType: widget.smartDashesType,
-                            smartQuotesType: widget.smartQuotesType,
-                          ),
-                        ),
+                          ],
+                        ],
                       ),
-                      if (!effectiveShrinkWrap ||
-                          minHeight > 0 ||
-                          widget.showFullScreenView ||
-                          result.isNotEmpty) ...<Widget>[
-                        FadeTransition(opacity: viewDividerFadeCurve, child: viewDivider),
-                        Flexible(
-                          fit: (effectiveShrinkWrap && !widget.showFullScreenView)
-                              ? FlexFit.loose
-                              : FlexFit.tight,
-                          child: FadeTransition(
-                            opacity: viewListFadeOnIntervalCurve,
-                            child: widget.viewBuilder == null
-                                ? MediaQuery.removePadding(
-                                    context: context,
-                                    removeTop: true,
-                                    child: ListView(
-                                      padding: EdgeInsets.only(
-                                        bottom: MediaQuery.viewInsetsOf(context).bottom,
-                                      ),
-                                      shrinkWrap: effectiveShrinkWrap,
-                                      children: result.toList(),
-                                    ),
-                                  )
-                                : widget.viewBuilder!(result),
-                          ),
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -1296,7 +1385,9 @@ class _SearchAnchorWithSearchBar extends SearchAnchor {
     super.enabled,
     super.smartDashesType,
     super.smartQuotesType,
+    FocusNode? barFocusNode,
   }) : super(
+         enableTapHandling: false,
          viewHintText: viewHintText ?? barHintText,
          headerHeight: viewHeaderHeight,
          headerTextStyle: viewHeaderTextStyle,
@@ -1309,6 +1400,7 @@ class _SearchAnchorWithSearchBar extends SearchAnchor {
            return SearchBar(
              constraints: constraints,
              controller: controller,
+             focusNode: barFocusNode,
              onTap: () {
                controller.openView();
                onTap?.call();
@@ -1399,6 +1491,8 @@ class SearchController extends TextEditingController {
 }
 
 /// A Material Design search bar.
+///
+/// Learn more about [SearchBar] on the [Flutter YouTube channel](https://www.youtube.com/watch?v=vM2dC8OCZoY).
 ///
 /// A [SearchBar] looks like a [TextField]. Tapping a SearchBar typically shows a
 /// "search view" route: a route with the search bar at the top and a list of
@@ -1608,7 +1702,7 @@ class SearchBar extends StatefulWidget {
   /// {@macro flutter.widgets.editableText.autofocus}
   final bool autoFocus;
 
-  /// {@macro flutter.widgets.TextField.textInputAction}
+  /// {@macro material_ui.TextField.textInputAction}
   final TextInputAction? textInputAction;
 
   /// The type of action button to use for the keyboard.
@@ -1806,6 +1900,11 @@ class _SearchBarState extends State<SearchBar> {
           child: IgnorePointer(
             ignoring: !widget.enabled,
             child: InkWell(
+              // Avoid creating a redundant focus stop and focusable/tappable
+              // semantics node on the InkWell, since the inner TextField
+              // already handles focus and semantics for the SearchBar.
+              canRequestFocus: false,
+              excludeFromSemantics: true,
               onTap: () {
                 widget.onTap?.call();
                 if (!_focusNode.hasFocus) {

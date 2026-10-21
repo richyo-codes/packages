@@ -37,6 +37,8 @@ import 'text_theme.dart';
 import 'theme.dart';
 import 'theme_data.dart';
 
+part 'generated/list_tile_defaults_m3.g.dart';
+
 // Examples can assume:
 // int _act = 1;
 
@@ -168,7 +170,7 @@ enum ListTileTitleAlignment {
 /// A single fixed-height row that typically contains some text as well as
 /// a leading or trailing icon.
 ///
-/// {@youtube 560 315 https://www.youtube.com/watch?v=l8dj0yPBvgQ}
+/// Learn more about [ListTile] on the [Flutter YouTube channel](https://www.youtube.com/watch?v=l8dj0yPBvgQ).
 ///
 /// A list tile contains one to three lines of text optionally flanked by icons or
 /// other widgets, such as check boxes. The icons (or other widgets) for the
@@ -205,20 +207,7 @@ enum ListTileTitleAlignment {
 ///
 /// <callout-box>
 ///
-// TODO(framework): Add unit tests to this code snippet.
-// https://github.com/flutter/flutter/issues/188530
-///
-/// ```dart
-/// const ColoredBox(
-///   color: Colors.green,
-///   child: Material(
-///     child: ListTile(
-///       title: Text('ListTile with red background'),
-///       tileColor: Colors.red,
-///     ),
-///   ),
-/// )
-/// ```
+/// {@example /example/lib/list_tile/list_tile.snippet.0.dart#body indent=strip}
 ///
 /// </callout-box>
 ///
@@ -303,52 +292,21 @@ enum ListTileTitleAlignment {
 ///
 /// <callout-box>
 ///
-// TODO(framework): Add unit tests to this code snippet.
-// https://github.com/flutter/flutter/issues/188530
-///
 /// To use a [ListTile] within a [Row], it needs to be wrapped in an
 /// [Expanded] widget. [ListTile] requires fixed width constraints,
 /// whereas a [Row] does not constrain its children.
 ///
-/// ```dart
-/// const Row(
-///   children: <Widget>[
-///     Expanded(
-///       child: ListTile(
-///         leading: FlutterLogo(),
-///         title: Text('These ListTiles are expanded '),
-///       ),
-///     ),
-///     Expanded(
-///       child: ListTile(
-///         trailing: FlutterLogo(),
-///         title: Text('to fill the available space.'),
-///       ),
-///     ),
-///   ],
-/// )
-/// ```
+/// {@example /example/lib/list_tile/list_tile.snippet.1.dart#body indent=strip}
 ///
 /// </callout-box>
 ///
 /// <callout-box>
 ///
-// TODO(framework): Add unit tests to this code snippet.
-// https://github.com/flutter/flutter/issues/188530
-///
 /// Tiles can be much more elaborate. Here is a tile which can be tapped, but
 /// which is disabled when the `_act` variable is not 2. When the tile is
 /// tapped, the whole row has an ink splash effect (see [InkWell]).
 ///
-/// ```dart
-/// ListTile(
-///   leading: const Icon(Icons.flight_land),
-///   title: const Text("Trix's airplane"),
-///   subtitle: _act != 2 ? const Text('The airplane is only in Act II.') : null,
-///   enabled: _act == 2,
-///   onTap: () { /* react to the tile being tapped */ }
-/// )
-/// ```
+/// {@example /example/lib/list_tile/list_tile.snippet.2.dart#body indent=strip}
 ///
 /// </callout-box>
 ///
@@ -366,31 +324,12 @@ enum ListTileTitleAlignment {
 ///
 /// <callout-box>
 ///
-// TODO(framework): Add unit tests to this code snippet.
-// https://github.com/flutter/flutter/issues/188530
-///
 /// Here is an example of a one-line, non-[dense] ListTile with a
 /// tappable leading widget that adheres to accessibility requirements and
 /// the Material spec. To adjust the use case below for a one-line, [dense]
 /// ListTile, adjust the vertical padding to 8.0.
 ///
-/// ```dart
-/// ListTile(
-///   leading: GestureDetector(
-///     behavior: HitTestBehavior.translucent,
-///     onTap: () {},
-///     child: Container(
-///       width: 48,
-///       height: 48,
-///       padding: const EdgeInsets.symmetric(vertical: 4.0),
-///       alignment: Alignment.center,
-///       child: const CircleAvatar(),
-///     ),
-///   ),
-///   title: const Text('title'),
-///   dense: false,
-/// )
-/// ```
+/// {@example /example/lib/list_tile/list_tile.snippet.3.dart#body indent=strip}
 ///
 /// </callout-box>
 ///
@@ -552,7 +491,7 @@ class ListTile extends StatelessWidget {
   ///   [ListTileThemeData].
   final bool? isThreeLine;
 
-  /// {@template flutter.material.ListTile.dense}
+  /// {@template material_ui.ListTile.dense}
   /// Whether this list tile is part of a vertically dense list.
   ///
   /// If this property is null then its value is based on [ListTileTheme.dense].
@@ -565,7 +504,7 @@ class ListTile extends StatelessWidget {
 
   /// Defines how compact the list tile's layout will be.
   ///
-  /// {@macro flutter.material.themedata.visualDensity}
+  /// {@macro material_ui.themedata.visualDensity}
   ///
   /// See also:
   ///
@@ -573,7 +512,7 @@ class ListTile extends StatelessWidget {
   ///    widgets within a [Theme].
   final VisualDensity? visualDensity;
 
-  /// {@template flutter.material.ListTile.shape}
+  /// {@template material_ui.ListTile.shape}
   /// Defines the tile's [InkWell.customBorder] and [Ink.decoration] shape.
   /// {@endtemplate}
   ///
@@ -698,10 +637,10 @@ class ListTile extends StatelessWidget {
   /// Inoperative if [enabled] is false.
   final GestureLongPressCallback? onLongPress;
 
-  /// {@macro flutter.cupertino.inkwell.onFocusChange}
+  /// {@macro cupertino_ui.inkwell.onFocusChange}
   final ValueChanged<bool>? onFocusChange;
 
-  /// {@template flutter.material.ListTile.mouseCursor}
+  /// {@template material_ui.ListTile.mouseCursor}
   /// The cursor for a mouse pointer when it enters or is hovering over the
   /// widget.
   ///
@@ -751,7 +690,7 @@ class ListTile extends StatelessWidget {
   /// {@macro flutter.widgets.Focus.autofocus}
   final bool autofocus;
 
-  /// {@template flutter.material.ListTile.tileColor}
+  /// {@template material_ui.ListTile.tileColor}
   /// Defines the background color of `ListTile` when [selected] is false.
   ///
   /// If this property is null and [selected] is false then [ListTileThemeData.tileColor]
@@ -768,7 +707,7 @@ class ListTile extends StatelessWidget {
   /// if it's not null and to [Colors.transparent] if it's null.
   final Color? selectedTileColor;
 
-  /// {@template flutter.material.ListTile.enableFeedback}
+  /// {@template material_ui.ListTile.enableFeedback}
   /// Whether detected gestures should provide acoustic and/or haptic feedback.
   ///
   /// For example, on Android a tap will produce a clicking sound and a
@@ -782,7 +721,7 @@ class ListTile extends StatelessWidget {
   ///  * [Feedback] for providing platform-specific feedback to certain actions.
   final bool? enableFeedback;
 
-  /// {@template flutter.material.ListTile.horizontalTitleGap}
+  /// {@template material_ui.ListTile.horizontalTitleGap}
   /// The horizontal gap between the titles and the leading/trailing widgets.
   ///
   /// If null, then the value of [ListTileTheme.horizontalTitleGap] is used. If
@@ -790,7 +729,7 @@ class ListTile extends StatelessWidget {
   /// {@endtemplate}
   final double? horizontalTitleGap;
 
-  /// {@template flutter.material.ListTile.minVerticalPadding}
+  /// {@template material_ui.ListTile.minVerticalPadding}
   /// The minimum padding on the top and bottom of the title and subtitle widgets.
   ///
   /// If null, then the value of [ListTileTheme.minVerticalPadding] is used. If
@@ -798,7 +737,7 @@ class ListTile extends StatelessWidget {
   /// {@endtemplate}
   final double? minVerticalPadding;
 
-  /// {@template flutter.material.ListTile.minLeadingWidth}
+  /// {@template material_ui.ListTile.minLeadingWidth}
   /// The minimum width allocated for the [ListTile.leading] widget.
   ///
   /// If null, then the value of [ListTileTheme.minLeadingWidth] is used. If
@@ -806,7 +745,7 @@ class ListTile extends StatelessWidget {
   /// {@endtemplate}
   final double? minLeadingWidth;
 
-  /// {@template flutter.material.ListTile.minTileHeight}
+  /// {@template material_ui.ListTile.minTileHeight}
   /// The minimum height allocated for the [ListTile] widget.
   ///
   /// If this is null, default tile heights are 56.0, 72.0, and 88.0 for one,
@@ -837,7 +776,7 @@ class ListTile extends StatelessWidget {
   // the default value to true.
   final bool internalAddSemanticForOnTap;
 
-  /// {@macro flutter.material.inkwell.statesController}
+  /// {@macro material_ui.inkwell.statesController}
   final MaterialStatesController? statesController;
 
   /// Add a one pixel border in between each tile. If color isn't specified the
@@ -884,7 +823,7 @@ class ListTile extends StatelessWidget {
     final ListTileStyle listTileStyle =
         style ?? tileTheme.style ?? theme.listTileTheme.style ?? ListTileStyle.list;
     final ListTileThemeData defaults = theme.useMaterial3
-        ? _LisTileDefaultsM3(context)
+        ? _ListTileDefaultsM3(context)
         : _LisTileDefaultsM2(context, listTileStyle);
 
     final Color backgroundColor =
@@ -1871,47 +1810,3 @@ class _LisTileDefaultsM2 extends ListTileThemeData {
     Brightness.dark => null,
   };
 }
-
-// BEGIN GENERATED TOKEN PROPERTIES - LisTile
-
-// Do not edit by hand. The code between the "BEGIN GENERATED" and
-// "END GENERATED" comments are generated from data in the Material
-// Design token database by the script:
-//   dev/tools/gen_defaults/bin/gen_defaults.dart.
-
-// dart format off
-class _LisTileDefaultsM3 extends ListTileThemeData {
-  _LisTileDefaultsM3(this.context)
-    : super(
-        contentPadding: const EdgeInsetsDirectional.only(start: 16.0, end: 24.0),
-        minLeadingWidth: 24,
-        minVerticalPadding: 8,
-        shape: const RoundedRectangleBorder(),
-      );
-
-  final BuildContext context;
-  late final ThemeData _theme = Theme.of(context);
-  late final ColorScheme _colors = _theme.colorScheme;
-  late final TextTheme _textTheme = _theme.textTheme;
-
-  @override
-  Color? get tileColor =>  Colors.transparent;
-
-  @override
-  TextStyle? get titleTextStyle => _textTheme.bodyLarge!.copyWith(color: _colors.onSurface);
-
-  @override
-  TextStyle? get subtitleTextStyle => _textTheme.bodyMedium!.copyWith(color: _colors.onSurfaceVariant);
-
-  @override
-  TextStyle? get leadingAndTrailingTextStyle => _textTheme.labelSmall!.copyWith(color: _colors.onSurfaceVariant);
-
-  @override
-  Color? get selectedColor => _colors.primary;
-
-  @override
-  Color? get iconColor => _colors.onSurfaceVariant;
-}
-// dart format on
-
-// END GENERATED TOKEN PROPERTIES - LisTile

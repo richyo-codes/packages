@@ -327,6 +327,7 @@ class FakeStoreKit2Platform implements InAppPurchase2API {
   SK2ProductPurchaseOptionsMessage? lastPurchaseOptions;
   Map<String, Set<String>> eligibleWinBackOffers = <String, Set<String>>{};
   Map<String, bool> eligibleIntroductoryOffers = <String, bool>{};
+  int showManageSubscriptionsCallCount = 0;
 
   /// Simulates purchase result for testing non-success scenarios.
   /// Set to userCancelled, pending, or unverified to test those cases.
@@ -350,12 +351,13 @@ class FakeStoreKit2Platform implements InAppPurchase2API {
     eligibleWinBackOffers = <String, Set<String>>{};
     eligibleIntroductoryOffers = <String, bool>{};
     simulatedPurchaseResult = SK2ProductPurchaseResultMessage.success;
+    showManageSubscriptionsCallCount = 0;
     transactionsList = <SK2TransactionMessage>[
       SK2TransactionMessage(
         id: 123,
         originalId: 123,
         productId: 'product_id',
-        purchaseDate: '12-12',
+        purchaseDate: 123123.121,
         purchasedQuantity: 2,
         status: SK2PurchaseStatusMessage.purchased,
       ),
@@ -365,7 +367,8 @@ class FakeStoreKit2Platform implements InAppPurchase2API {
         id: 123,
         originalId: 123,
         productId: 'product_id',
-        purchaseDate: '12-12',
+        purchaseDate: 123123.121,
+        expirationDate: 321321.32,
         receiptData: 'fake_jws_representation',
         appAccountToken: 'fake_app_account_token',
         purchasedQuantity: 3,
@@ -383,7 +386,6 @@ class FakeStoreKit2Platform implements InAppPurchase2API {
       id: 123,
       originalId: 321,
       productId: '',
-      purchaseDate: '',
       appAccountToken: '',
       status: SK2PurchaseStatusMessage.restored,
     );
@@ -430,7 +432,8 @@ class FakeStoreKit2Platform implements InAppPurchase2API {
           id: 1,
           originalId: 2,
           productId: id,
-          purchaseDate: 'purchaseDate',
+          purchaseDate: 123123.121,
+          expirationDate: 321321.32,
           appAccountToken: 'appAccountToken',
           receiptData: 'receiptData',
           jsonRepresentation: 'jsonRepresentation',
@@ -556,6 +559,11 @@ class FakeStoreKit2Platform implements InAppPurchase2API {
 
   @override
   Future<void> presentOfferCodeRedeemSheet() async {}
+
+  @override
+  Future<void> showManageSubscriptions() async {
+    showManageSubscriptionsCallCount++;
+  }
 }
 
 SK2TransactionMessage createPendingTransaction(String id, {int quantity = 1}) {
@@ -563,7 +571,7 @@ SK2TransactionMessage createPendingTransaction(String id, {int quantity = 1}) {
     id: 1,
     originalId: 2,
     productId: id,
-    purchaseDate: 'purchaseDate',
+    purchaseDate: 123123.121,
     appAccountToken: 'appAccountToken',
     receiptData: 'receiptData',
     jsonRepresentation: 'jsonRepresentation',

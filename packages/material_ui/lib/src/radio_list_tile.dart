@@ -65,21 +65,7 @@ enum _RadioType { material, adaptive }
 ///
 /// <callout-box>
 ///
-// TODO(framework): Add unit tests to this code snippet.
-// https://github.com/flutter/flutter/issues/188530
-///
-/// ```dart
-/// const ColoredBox(
-///   color: Colors.green,
-///   child: Material(
-///     child: RadioListTile<Meridiem>(
-///       tileColor: Colors.red,
-///       title: Text('AM'),
-///       value: Meridiem.am,
-///     ),
-///   ),
-/// )
-/// ```
+/// {@example /example/lib/radio_list_tile/radio_list_tile.snippet.0.dart#body indent=strip}
 ///
 /// </callout-box>
 ///
@@ -411,12 +397,12 @@ class RadioListTile<T> extends StatefulWidget {
   /// If that is also null, then the default value is used.
   final WidgetStateProperty<Color?>? fillColor;
 
-  /// {@macro flutter.material.radio.materialTapTargetSize}
+  /// {@macro material_ui.radio.materialTapTargetSize}
   ///
   /// Defaults to [MaterialTapTargetSize.shrinkWrap].
   final MaterialTapTargetSize? materialTapTargetSize;
 
-  /// {@macro flutter.material.radio.hoverColor}
+  /// {@macro material_ui.radio.hoverColor}
   final Color? hoverColor;
 
   /// The color for the radio's [Material].
@@ -432,7 +418,7 @@ class RadioListTile<T> extends StatefulWidget {
   /// also null, then the default value is used in the pressed and hovered state.
   final WidgetStateProperty<Color?>? overlayColor;
 
-  /// {@macro flutter.material.radio.splashRadius}
+  /// {@macro material_ui.radio.splashRadius}
   ///
   /// If null, then the value of [RadioThemeData.splashRadius] is used. If that
   /// is also null, then [kRadialReactionRadius] is used.
@@ -501,7 +487,7 @@ class RadioListTile<T> extends StatefulWidget {
 
   /// Defines how compact the list tile's layout will be.
   ///
-  /// {@macro flutter.material.themedata.visualDensity}
+  /// {@macro material_ui.themedata.visualDensity}
   final VisualDensity? visualDensity;
 
   /// {@macro flutter.widgets.Focus.focusNode}
@@ -510,26 +496,26 @@ class RadioListTile<T> extends StatefulWidget {
   /// Controls the interactive states of the backing [ListTile].
   final WidgetStatesController? statesController;
 
-  /// {@macro flutter.cupertino.inkwell.onFocusChange}
+  /// {@macro cupertino_ui.inkwell.onFocusChange}
   final ValueChanged<bool>? onFocusChange;
 
-  /// {@macro flutter.material.ListTile.enableFeedback}
+  /// {@macro material_ui.ListTile.enableFeedback}
   ///
   /// See also:
   ///
   ///  * [Feedback] for providing platform-specific feedback to certain actions.
   final bool? enableFeedback;
 
-  /// {@macro flutter.material.ListTile.horizontalTitleGap}
+  /// {@macro material_ui.ListTile.horizontalTitleGap}
   final double? horizontalTitleGap;
 
-  /// {@macro flutter.material.ListTile.minVerticalPadding}
+  /// {@macro material_ui.ListTile.minVerticalPadding}
   final double? minVerticalPadding;
 
-  /// {@macro flutter.material.ListTile.minLeadingWidth}
+  /// {@macro material_ui.ListTile.minLeadingWidth}
   final double? minLeadingWidth;
 
-  /// {@macro flutter.material.ListTile.minTileHeight}
+  /// {@macro material_ui.ListTile.minTileHeight}
   final double? minTileHeight;
 
   final _RadioType _radioType;

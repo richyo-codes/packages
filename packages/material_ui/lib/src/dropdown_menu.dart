@@ -35,8 +35,10 @@ import 'theme_data.dart';
 /// current applied filter.
 ///
 /// Used by [DropdownMenu.filterCallback].
-typedef FilterCallback<T> =
-    List<DropdownMenuEntry<T>> Function(List<DropdownMenuEntry<T>> entries, String filter);
+typedef FilterCallback<T> = List<DropdownMenuEntry<T>> Function(
+  List<DropdownMenuEntry<T>> entries,
+  String filter,
+);
 
 /// A callback function that returns the index of the item that matches the
 /// current contents of a text field.
@@ -53,8 +55,10 @@ typedef SearchCallback<T> = int? Function(List<DropdownMenuEntry<T>> entries, St
 ///
 /// The `controller` is the [MenuController] that can be used to open and close
 /// the menu with and query the current state.
-typedef DropdownMenuDecorationBuilder =
-    InputDecoration Function(BuildContext context, MenuController controller);
+typedef DropdownMenuDecorationBuilder = InputDecoration Function(
+  BuildContext context,
+  MenuController controller,
+);
 
 const double _kMinimumWidth = 112.0;
 
@@ -150,7 +154,7 @@ enum DropdownMenuCloseBehavior {
 /// A dropdown menu that can be opened from a [TextField]. The selected
 /// menu item is displayed in that field.
 ///
-/// {@youtube 560 315 https://www.youtube.com/watch?v=giV9AbM2gd8}
+/// Learn more about [DropdownMenu] on the [Flutter YouTube channel](https://www.youtube.com/watch?v=giV9AbM2gd8).
 ///
 /// This widget is used to help people make a choice from a menu and put the
 /// selected item into the text input field. People can also filter the list based
@@ -670,7 +674,7 @@ class DropdownMenu<T> extends StatefulWidget {
   ///    and notifies its listeners on [TextEditingValue] changes.
   final List<TextInputFormatter>? inputFormatters;
 
-  /// {@macro flutter.material.MenuAnchor.alignmentOffset}
+  /// {@macro material_ui.MenuAnchor.alignmentOffset}
   final Offset? alignmentOffset;
 
   /// Defines the behavior for closing the dropdown menu when an item is selected.
@@ -706,13 +710,13 @@ class DropdownMenu<T> extends StatefulWidget {
   ///    the [TextField] can display.
   final int? maxLines;
 
-  /// {@macro flutter.widgets.TextField.textInputAction}
+  /// {@macro material_ui.TextField.textInputAction}
   final TextInputAction? textInputAction;
 
   /// {@macro flutter.widgets.editableText.cursorHeight}
   final double? cursorHeight;
 
-  /// {@macro flutter.cupertino.textfield.restorationId}
+  /// {@macro cupertino_ui.textfield.restorationId}
   final String? restorationId;
 
   /// An optional controller that allows opening and closing of the menu from
@@ -870,9 +874,8 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final BuildContext? highlightContext = buttonItemKeys[currentHighlight!].currentContext;
       if (highlightContext != null) {
-        Scrollable.of(
-          highlightContext,
-        ).position.ensureVisible(highlightContext.findRenderObject()!);
+        Scrollable.of(highlightContext).position
+            .ensureVisible(highlightContext.findRenderObject()!);
       }
     }, debugLabel: 'DropdownMenu.scrollToHighlight');
   }
@@ -1287,7 +1290,7 @@ class _DropdownMenuState<T> extends State<DropdownMenu<T>> {
         final MaterialLocalizations localizations = MaterialLocalizations.of(context);
         final Widget textField = Semantics(
           button: isButton,
-          // This is set specificly for iOS because iOS does not have any native
+          // This is set specifically for iOS because iOS does not have any native
           // APIs to show whether the menu is expanded or collapsed.
           hint: Theme.of(context).platform == TargetPlatform.iOS
               ? _controller.isOpen

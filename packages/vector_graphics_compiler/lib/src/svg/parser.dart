@@ -1091,6 +1091,20 @@ class SvgParser {
     }
   }
 
+  /// Parses a `mask-type` attribute value into a [MaskType].
+  MaskType? parseMaskType(String? maskType) {
+    if (maskType == null) {
+      return null;
+    }
+    switch (maskType.trim().toLowerCase()) {
+      case 'alpha':
+        return MaskType.alpha;
+      case 'luminance':
+        return MaskType.luminance;
+    }
+    return null;
+  }
+
   double _parseRawWidthHeight(String raw) {
     if (raw == '100%' || raw == '') {
       return double.infinity;
@@ -1295,6 +1309,10 @@ class SvgParser {
   }
 
   /// Parse the raw font weight string.
+  ///
+  /// An unrecognized value is ignored with a warning so that inheritance can
+  /// determine the effective weight, or throws a [StateError] when warnings are
+  /// treated as errors.
   FontWeight? parseFontWeight(String? fontWeight) {
     if (fontWeight == null) {
       return null;
@@ -1325,7 +1343,12 @@ class SvgParser {
         return FontWeight.w900;
     }
 
-    throw StateError('Invalid "font-weight": $fontWeight');
+    final errorMessage = 'Invalid "font-weight": $fontWeight';
+    if (_warningsAsErrors) {
+      throw StateError(errorMessage);
+    }
+    print('Warning: $errorMessage. Ignoring invalid value.');
+    return null;
   }
 
   /// Converts a SVG Color String (either a # prefixed color string or a named color) to a [Color].
@@ -1588,6 +1611,8 @@ class SvgParser {
         id: id,
       ),
       textAnchorMultiplier: parseTextAnchor(attributeMap['text-anchor']),
+      maskType: parseMaskType(attributeMap['mask-type']),
+      opacity: opacity,
     );
   }
 }
@@ -1769,6 +1794,8 @@ class SvgAttributes {
     this.dy,
     this.width,
     this.height,
+    this.maskType,
+    this.opacity,
   });
 
   /// For use in tests to construct arbitrary attributes.
@@ -1798,6 +1825,8 @@ class SvgAttributes {
     this.dy,
     this.width,
     this.height,
+    this.maskType,
+    this.opacity,
   });
 
   /// The empty set of properties.
@@ -1953,6 +1982,12 @@ class SvgAttributes {
   /// The relative y translation.
   final DoubleOrPercentage? dy;
 
+  /// The `mask-type` attribute.
+  final MaskType? maskType;
+
+  /// The element or group-level `opacity` attribute, clamped to 0.0..1.0.
+  final double? opacity;
+
   /// A copy of these attributes after absorbing a saveLayer.
   ///
   /// Specifically, this will null out `blendMode` and any opacity related
@@ -1983,6 +2018,7 @@ class SvgAttributes {
       y: y,
       width: width,
       height: height,
+      maskType: maskType,
     );
   }
 
@@ -2028,6 +2064,8 @@ class SvgAttributes {
       y: y,
       dx: dx,
       dy: dy,
+      maskType: maskType ?? parent.maskType,
+      opacity: opacity,
     );
   }
 }

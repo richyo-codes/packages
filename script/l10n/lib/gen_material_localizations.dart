@@ -14,6 +14,9 @@ String generateMaterialHeader(String regenerateInstructions) {
 // To regenerate the file, use:
 // $regenerateInstructions
 
+/// @docImport 'package:intl/intl.dart';
+library;
+
 import 'dart:collection';
 
 import 'package:flutter/widgets.dart';
@@ -77,4 +80,4 @@ const String materialFactoryArguments =
 
 const String materialSupportedLanguagesConstant = 'kMaterialSupportedLanguages';
 
-const String materialSupportedLanguagesDocMacro = 'flutter.localizations.material.languages';
+const String materialSupportedLanguagesDocMacro = 'material_ui.localizations.languages';

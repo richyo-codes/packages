@@ -352,8 +352,11 @@ class _TabStyle extends AnimatedWidget {
   }
 }
 
-typedef _LayoutCallback =
-    void Function(List<double> xOffsets, TextDirection textDirection, double width);
+typedef _LayoutCallback = void Function(
+  List<double> xOffsets,
+  TextDirection textDirection,
+  double width,
+);
 
 class _TabLabelBarRenderer extends RenderFlex {
   _TabLabelBarRenderer({
@@ -939,7 +942,7 @@ typedef TabValueChanged<T> = void Function(T value, int index);
 /// Typically created as the [AppBar.bottom] part of an [AppBar] and in
 /// conjunction with a [TabBarView].
 ///
-/// {@youtube 560 315 https://www.youtube.com/watch?v=POtoEH-5l40}
+/// Learn more about [TabBar] on the [Flutter YouTube channel](https://www.youtube.com/watch?v=POtoEH-5l40).
 ///
 /// If a [TabController] is not provided, then a [DefaultTabController] ancestor
 /// must be provided instead. The tab controller's [TabController.length] must
@@ -1066,8 +1069,7 @@ class TabBar extends StatefulWidget implements PreferredSizeWidget {
     this.tabAlignment,
     this.textScaler,
     this.indicatorAnimation,
-  }) : _isPrimary = true,
-       assert(indicator != null || (indicatorWeight > 0.0));
+  }) : _isPrimary = true;
 
   /// Creates a Material Design secondary tab bar.
   ///
@@ -1128,8 +1130,7 @@ class TabBar extends StatefulWidget implements PreferredSizeWidget {
     this.tabAlignment,
     this.textScaler,
     this.indicatorAnimation,
-  }) : _isPrimary = false,
-       assert(indicator != null || (indicatorWeight > 0.0));
+  }) : _isPrimary = false;
 
   /// Typically a list of two or more [Tab] widgets.
   ///
@@ -1185,7 +1186,8 @@ class TabBar extends StatefulWidget implements PreferredSizeWidget {
   /// If [ThemeData.useMaterial3] is false, the default value is 2.0.
   ///
   /// If [indicator] is specified or provided from [TabBarThemeData],
-  /// this property is ignored.
+  /// this property is ignored. Otherwise, when drawing the default underline
+  /// indicator, the value of this parameter must be greater than zero.
   final double indicatorWeight;
 
   /// The padding for the indicator.
@@ -1362,7 +1364,7 @@ class TabBar extends StatefulWidget implements PreferredSizeWidget {
   /// {@macro flutter.widgets.scrollable.dragStartBehavior}
   final DragStartBehavior dragStartBehavior;
 
-  /// {@template flutter.material.tabs.mouseCursor}
+  /// {@template material_ui.tabs.mouseCursor}
   /// The cursor for a mouse pointer when it enters or is hovering over the
   /// individual tab widgets.
   ///
@@ -1644,6 +1646,24 @@ class _TabBarState extends State<TabBar> {
     if (tabBarTheme.indicator != null) {
       return tabBarTheme.indicator!;
     }
+    assert(() {
+      if (widget.indicatorWeight <= 0.0) {
+        throw FlutterError.fromParts(<DiagnosticsNode>[
+          ErrorSummary('Invalid indicatorWeight for TabBar.'),
+          ErrorDescription(
+            'The indicatorWeight must be greater than zero when the TabBar '
+            'draws its default underline indicator, that is when no indicator '
+            'is provided by the TabBar or the TabBarTheme.',
+          ),
+          ErrorHint(
+            'To fix this, set indicatorWeight to a value greater than zero, '
+            'or provide an indicator with the TabBar.indicator or '
+            'TabBarThemeData.indicator property.',
+          ),
+        ]);
+      }
+      return true;
+    }());
 
     Color color = widget.indicatorColor ?? tabBarTheme.indicatorColor ?? _defaults.indicatorColor!;
     // ThemeData tries to avoid this by having indicatorColor avoid being the
@@ -2188,9 +2208,8 @@ class _TabBarState extends State<TabBar> {
 
     if (widget.isScrollable) {
       final EdgeInsetsGeometry? effectivePadding = effectiveTabAlignment == TabAlignment.startOffset
-          ? const EdgeInsetsDirectional.only(
-              start: _kStartOffset,
-            ).add(widget.padding ?? EdgeInsets.zero)
+          ? const EdgeInsetsDirectional.only(start: _kStartOffset)
+                .add(widget.padding ?? EdgeInsets.zero)
           : widget.padding;
 
       tabBar = ScrollConfiguration(
@@ -2239,9 +2258,8 @@ class _TabBarState extends State<TabBar> {
     return Material(
       type: MaterialType.transparency,
       child: MediaQuery(
-        data: MediaQuery.of(
-          context,
-        ).copyWith(textScaler: widget.textScaler ?? tabBarTheme.textScaler),
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: widget.textScaler ?? tabBarTheme.textScaler),
         child: tabBar,
       ),
     );
@@ -2253,7 +2271,7 @@ class _TabBarState extends State<TabBar> {
 ///
 /// This widget is typically used in conjunction with a [TabBar].
 ///
-/// {@youtube 560 315 https://www.youtube.com/watch?v=POtoEH-5l40}
+/// Learn more about [TabBarView] on the [Flutter YouTube channel](https://www.youtube.com/watch?v=POtoEH-5l40).
 ///
 /// If a [TabController] is not provided, then there must be a [DefaultTabController]
 /// ancestor.
@@ -2305,7 +2323,7 @@ class TabBarView extends StatefulWidget {
   /// {@macro flutter.widgets.pageview.viewportFraction}
   final double viewportFraction;
 
-  /// {@macro flutter.cupertino.Material.clipBehavior}
+  /// {@macro cupertino_ui.Material.clipBehavior}
   ///
   /// Defaults to [Clip.hardEdge].
   final Clip clipBehavior;
@@ -2632,7 +2650,7 @@ class TabPageSelectorIndicator extends StatelessWidget {
 /// Uses [TabPageSelectorIndicator] to display a row of small circular
 /// indicators, one per tab.
 ///
-/// {@youtube 560 315 https://www.youtube.com/watch?v=Q628ue9Cq7U}
+/// Learn more about [TabPageSelector] on the [Flutter YouTube channel](https://www.youtube.com/watch?v=Q628ue9Cq7U).
 ///
 /// The selected tab's indicator is highlighted. Often used in conjunction with
 /// a [TabBarView].

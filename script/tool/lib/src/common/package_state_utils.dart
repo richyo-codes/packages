@@ -135,7 +135,9 @@ bool _isTestChange(List<String> pathComponents) {
       pathComponents.contains('Tests') ||
       pathComponents.last == 'dart_test.yaml' ||
       // Pigeon's custom platform tests.
-      pathComponents.first == 'platform_tests';
+      pathComponents.first == 'platform_tests' ||
+      // Standalone test apps within a package (e.g., material_ui/test_apps/).
+      pathComponents.first == 'test_apps';
 }
 
 // True if the given file is an example file other than the one that will be
@@ -193,6 +195,8 @@ Future<bool> _isDevChange(
   return _isTestChange(pathComponents) ||
       // Agent directories (.agents/) are for developer-only utility tools (skills, scripts).
       pathComponents.first == '.agents' ||
+      // Eval directories (evals/) are for evaluation utility code.
+      pathComponents.first == 'evals' ||
       // The top-level "tool" directory is for non-client-facing utility
       // code, such as test scripts.
       pathComponents.first == 'tool' ||
@@ -204,6 +208,8 @@ Future<bool> _isDevChange(
       pathComponents.first == 'run_tests.sh' ||
       // CONTRIBUTING.md is dev-facing.
       pathComponents.last == 'CONTRIBUTING.md' ||
+      // AGENTS.md is dev/agent-facing.
+      pathComponents.last == 'AGENTS.md' ||
       // The top-level "pending_changelogs" directory is the repo convention for storing
       // pending changelog files.
       pathComponents.first == 'pending_changelogs' ||
